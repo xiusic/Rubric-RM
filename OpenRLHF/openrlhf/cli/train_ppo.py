@@ -262,6 +262,7 @@ def train(args):
         eos_token_id=tokenizer.eos_token_id,
         # remote reward model
         remote_rm_url=args.remote_rm_url,
+        rule_based_reward=args.rule_based_reward,
         save_hf_ckpt=args.save_hf_ckpt,
         disable_ds_ckpt=args.disable_ds_ckpt,
     )
