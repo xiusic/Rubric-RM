@@ -68,6 +68,11 @@ def train(args):
         train_split=args.train_split,
         eval_split=args.eval_split,
     )
+
+    # print("Train Dataset original: ", train_data[0], "\n", "#"*100) 
+    # print("Eval dataset: ", eval_data) 
+    # exit()
+
     train_data = train_data.select(range(min(args.max_samples, len(train_data))))
     eval_data = eval_data.select(range(min(args.max_samples, len(eval_data))))
     train_dataset = RewardDataset(
@@ -88,7 +93,9 @@ def train(args):
         is_dpo=True,
         multiple_of=args.ring_attn_size,
     )
-
+    # print("Train Dataset after: ", tokenizer.batch_decode(train_dataset[0][0], skip_special_tokens=False), "\n", "#"*100) 
+    # print("Train Dataset after: ", tokenizer.batch_decode(train_dataset[1][0], skip_special_tokens=False), "\n", "#"*100) 
+    # exit()
     # prepare dataloader
     train_dataloader = strategy.setup_dataloader(
         train_dataset,
