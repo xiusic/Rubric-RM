@@ -1,5 +1,5 @@
 set -x
-export CUDA_VISIBLE_DEVICES=1,2,4
+export CUDA_VISIBLE_DEVICES=4,5,6
 
 ray job submit --address="http://127.0.0.1:8265" \
    --runtime-env-json='{"working_dir": "/shared/nas2/xiusic/Rubric-RM/train/OpenRLHF"}' \
@@ -14,7 +14,7 @@ ray job submit --address="http://127.0.0.1:8265" \
    --save_path /shared/nas2/xiusic/gaotang/ckpt/skylab-v02/llama3-8b-rlhf-all-skylab-v02-grpo-unhacked-flexible \
    --micro_train_batch_size 4 \
    --train_batch_size 128 \
-   --micro_rollout_batch_size 16 \
+   --micro_rollout_batch_size 8 \
    --rollout_batch_size 1024 \
    --n_samples_per_prompt 6 \
    --max_epochs 1 \
@@ -33,7 +33,7 @@ ray job submit --address="http://127.0.0.1:8265" \
    --adam_offload \
    --gradient_checkpointing \
    --packing_samples \
-   --save_steps 1 \
+   --save_steps 5 \
    --save_hf_ckpt \
    --load_checkpoint \
    --ckpt_path /shared/nas2/xiusic/gaotang/ckpt/skylab-v02/llama3-8b-rlhf-all-skylab-v02-grpo-unhacked-flexible \
