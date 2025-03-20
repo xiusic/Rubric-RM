@@ -58,3 +58,14 @@ export LD_LIBRARY_PATH="/software/cuda-12.4/lib64:$LD_LIBRARY_PATH"
 ray start --head
 ray job submit --working-dir . -- python your_script.py
 ```
+
+Update [03/20]
+
+Existing datasets (in huggingface):
+
+- `gaotang/sky_v02_processed_llamma3` (for sky-v02-llama-3.1-8B-rl)
+- `gaotang/sky_v02_processed_llamma3_sft` (for sky-v02-llama-3.1-8B-sft)
+- `gaotang/sky_v02_processed_qwen` (for sky-v02-qwen-rl)
+
+Note: the first two differ in system prompt (no need to do COT rubrics for sft model), and the final one substitutes 
+all the `<im_start>` and `<im_end>` tokens inside the dataset with `<|begin_of_text|>` and `<|end_of_text|>` respectively.

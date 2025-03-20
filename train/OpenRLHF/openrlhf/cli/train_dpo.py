@@ -112,6 +112,9 @@ def train(args):
         False,
         eval_dataset.packing_collate_fn if args.packing_samples else eval_dataset.collate_fn,
     )
+    print("train loader: ", len(train_dataloader)) 
+    print("eval loader: ", len(eval_dataloader))
+    # exit()
 
     # scheduler
     num_update_steps_per_epoch = len(train_dataset) // args.train_batch_size

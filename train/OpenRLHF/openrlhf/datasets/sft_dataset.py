@@ -18,9 +18,25 @@ def preprocess_data(
             if isinstance(prompt_message, str) and isinstance(response_message, str):
                 prompt_message = [{"role": "user", "content": prompt_message}]
                 response_message = [{"role": "assistant", "content": response_message}]
+            
+            # print(prompt_message, response_message)
+            # prompt = apply_chat_template(prompt_message, tokenize=False, add_generation_prompt=True)
+            # response = apply_chat_template(prompt_message + response_message, tokenize=False)[len(prompt) :]
 
-            prompt = apply_chat_template(prompt_message, tokenize=False, add_generation_prompt=True)
+            if isinstance(prompt_message, str):
+                prompt_message = [{"role": "user", "content": prompt_message}]
+            if isinstance(response_message, str):
+                response_message = [{"role": "assistant", "content": response_message}]
+            
+            prompt = apply_chat_template(prompt_message, tokenize=False)
             response = apply_chat_template(prompt_message + response_message, tokenize=False)[len(prompt) :]
+            # response = response_message
+
+            # print(prompt)
+            # print("#" * 100) 
+            # print(response)
+            # print("#"*100)
+            # exit()
         else:
             prompt = apply_chat_template(data[input_key][:-1], tokenize=False, add_generation_prompt=True)
             response = apply_chat_template(data[input_key], tokenize=False)[len(prompt) :]

@@ -10,6 +10,8 @@ from openrlhf.models import Actor
 from openrlhf.trainer import SFTTrainer
 from openrlhf.utils import blending_datasets, get_strategy, get_tokenizer
 
+from pathlib import Path
+
 
 def train(args):
     # configure strategy
@@ -114,7 +116,8 @@ def train(args):
         consumed_samples = states["consumed_samples"]
         strategy.print(f"Loaded the checkpoint: {args.ckpt_path}, consumed_samples: {consumed_samples}")
 
-    os.makedirs(args.save_path, exist_ok=True)
+    Path(args.save_path).mkdir(parents=True, exist_ok=True)
+    # os.makedirs(args.save_path, exist_ok=True)
 
     # configure Trainer
     trainer = SFTTrainer(

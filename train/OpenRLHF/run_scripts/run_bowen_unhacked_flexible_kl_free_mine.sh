@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -x
-export CUDA_VISIBLE_DEVICES=1,2,4,5,6
+export CUDA_VISIBLE_DEVICES=4,5,6
 
 ## Define the right variables
 
@@ -26,7 +26,7 @@ ray job submit --address="http://127.0.0.1:8265" \
    --ref_num_nodes 0 \
    --ref_num_gpus_per_node 0 \
    --actor_num_nodes 1 \
-   --actor_num_gpus_per_node 4 \
+   --actor_num_gpus_per_node 2 \
    --vllm_num_engines 1 \
    --vllm_tensor_parallel_size 1 \
    --pretrain "$USE_MODEL" \

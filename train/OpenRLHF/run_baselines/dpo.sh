@@ -1,6 +1,6 @@
 
 
-deepspeed --include localhost:0,1,2,3 --module openrlhf.cli.train_dpo \
+deepspeed --include localhost:4 --module openrlhf.cli.train_dpo \
    --save_path /shared/nas2/xiusic/gaotang/skylab-v02-baseline/ckpt/llama3-8b-dpo \
    --save_steps -1 \
    --logging_steps 1 \
@@ -20,6 +20,8 @@ deepspeed --include localhost:0,1,2,3 --module openrlhf.cli.train_dpo \
    --rejected_key rejected \
    --flash_attn \
    --gradient_checkpointing \
-   --use_wandb 7595e33990e2af809f914f13cefa202fc8fba1ee \
-   --wandb_project Rubric-RM-baseline \
-   --wandb_run_name Llamma3-8b-dpo-lr5e-7skywork \
+   --adam_offload \
+   --packing_samples \
+#    --use_wandb 7595e33990e2af809f914f13cefa202fc8fba1ee \
+#    --wandb_project Rubric-RM-baseline \
+#    --wandb_run_name Llamma3-8b-dpo-lr5e-7skywork \

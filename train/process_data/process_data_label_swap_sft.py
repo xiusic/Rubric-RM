@@ -1,0 +1,123 @@
+import copy
+from datasets import load_dataset, concatenate_datasets, Dataset
+
+
+# "Please act as an impartial judge and evaluate the quality of the responses provided by two AI assistants to the user question displayed below. 
+# You should choose the assistant that follows the user's instructions and answers the user's question better. Y
+# our evaluation should consider factors such as the helpfulness, relevance, accuracy, depth, creativity, 
+# and level of detail of their responses. Begin your evaluation by comparing the two responses and provide a short explanation. Avoid any position biases and ensure that the order in which the responses were presented does not influence your decision. Do not allow the length of the responses to influence your evaluation. Do not favor certain names of the assistants. Be as objective as possible. After providing your explanation, output your final verdict by strictly following this format: \"[[A]]\" if assistant A is better, \"[[B]]\" if assistant B is better, and \"[[C]]\" for a tie.", "prompt_template": "[User Question]\n{question}\n\n[The Start of Assistant A's Answer]\n{answer_a}\n[The End of Assistant A's Answer]\n\n[The Start of Assistant B's Answer]\n{answer_b}\n[The End of Assistant B's Answer]", "description": "Prompt for general questions", "category": "general", "output_format": "[[A]]""
+from collections import Counter
+
+prompt_template = [
+    {
+        'role': 'system',
+        'content': (
+            "Please act as an impartial judge and evaluate the quality of the responses provided by two AI assistants to the user question displayed below. "
+            "You should choose the assistant that follows the user's instructions and answers the user's question better. " 
+            "Do not allow the length of the responses to influence your evaluation. Do not favor certain names "
+            "of the assistants. Be as objective as possible. After providing your explanation, output your final verdict by strictly following this format: "
+            '"A" if assistant A is better, "B" if assistant B is better.'
+        )
+    },
+    {
+        'role': 'user',
+        'content': (
+            "[The following is the conversation between Assistant A and the user]\n{conversation1}\n\n"
+            "[The following is the conversation between Assistant B and the user]\n{conversation2}"
+        )
+    }
+]
+
+
+CURRENT_NUM = 0
+CURRENT_NUM_EASY, CURRENT_NUM_HARD = 0, 0
+
+def substitute_tags(input_string, assistant_name):
+    output = copy.deepcopy(input_string)
+    output = output.replace("<|im_start|>user\n", f"User: ")
+    output = output.replace("<|im_start|>user", f"User:")
+    output = output.replace("<|im_start|>assistant\n", f"{assistant_name}: ")
+    output = output.replace("<|im_start|>assistant", f"{assistant_name}:")
+    output = output.replace("<|im_end|>", "")
+    return output
+
+def collect_skywork_reward(replace_special=False):
+    global CURRENT_NUM 
+    ds = load_dataset("Skywork/Skywork-Reward-Preference-80K-v0.2")
+
+    def reformat_conversation(conv, assistant_name):
+        conversations = []
+        for item in conv:
+            if item['role'] == 'user':
+                content = item['content']
+                if replace_special:
+                    content = substitute_tags(input_string=content, assistant_name=assistant_name)
+                conversations.append('User' + ": " + content)
+            else:
+                content = item['content']
+                if replace_special:
+                    content = substitute_tags(input_string=content, assistant_name=assistant_name)
+                conversations.append(assistant_name + ": " + content)
+        return '\n'.join(conversations)
+
+
+    context_messages = []
+    winner = []
+
+    for item in ds['train']:
+        winning_response = item['chosen']
+        losing_response = item['rejected']
+
+        if CURRENT_NUM % 2 == 0:
+            conversation1 = reformat_conversation(
+                conv=winning_response, 
+                assistant_name="Assistant A"
+            )
+            conversation2 = reformat_conversation(
+                conv=losing_response,
+                assistant_name="Assistant B"
+            )
+            winner.append('A')
+        else:
+            conversation1 = reformat_conversation(
+                conv=losing_response,
+                assistant_name="Assistant A"
+            )
+            conversation2 = reformat_conversation(
+                conv=winning_response,
+                assistant_name="Assistant B"
+            )
+            winner.append('B') 
+
+        curr_prompt = copy.deepcopy(prompt_template) 
+        curr_prompt[1]['content'] = curr_prompt[1]['content'].format(
+            conversation1=conversation1,
+            conversation2=conversation2
+        )
+
+        context_messages.append(curr_prompt)
+        CURRENT_NUM += 1 
+
+        # print(curr_prompt)
+        # exit()
+
+    dataset = Dataset.from_dict({
+        'context_messages': context_messages,
+        'winner': winner
+    })
+
+    return dataset 
+ 
+
+def new_dataset_sky():
+    ds = collect_skywork_reward()
+    # ds.save_to_disk('/shared/nas2/xiusic/gaotang/data/sky_v02')
+
+    # print(ds[0]) 
+    ds.push_to_hub("gaotang/sky_v02_processed_llamma3_sft")
+    print(Counter(ds["winner"]))
+
+
+if __name__ == '__main__':
+    new_dataset_sky()
+    
