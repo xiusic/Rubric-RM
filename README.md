@@ -69,3 +69,10 @@ Existing datasets (in huggingface):
 
 Note: the first two differ in system prompt (no need to do COT rubrics for sft model), and the final one substitutes 
 all the `<im_start>` and `<im_end>` tokens inside the dataset with `<|begin_of_text|>` and `<|end_of_text|>` respectively.
+
+Reward functions that we use are implemented by the following two files
+
+- `train/OpenRLHF/reward_function_flexible.py`
+- `train/OpenRLHF/custom_reward_function.py`
+
+Note that the first one is preferred after experiments.
