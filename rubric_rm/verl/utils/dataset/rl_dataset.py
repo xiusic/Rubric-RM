@@ -7,6 +7,7 @@ from tqdm import tqdm
 from transformers import PreTrainedTokenizer
 from transformers import ProcessorMixin
 from verl.utils.model import compute_position_id_with_mask
+from copy import deepcopy
 
 
 class RubricRMDataset(Dataset):
@@ -48,16 +49,16 @@ class RubricRMDataset(Dataset):
         self._read_files_and_tokenize()
 
     def _read_files_and_tokenize(self):
-        self.dataset = load_dataset(self.files)['train']
+        self.dataset = load_dataset(self.files)['train'].to_dict()
         self.dataset = [{
             self.prompt_key: self.dataset['context_messages'][i],
             'reward_model': {
                 'ground_truth': self.dataset['winner'][i],
             },
             'data_source': self.files,
-        } for i in range(self.dataset.num_rows)]
+        } for i in range(len(self.dataset['context_messages']))]
 
-        print(f'dataset len: {len(self.dataframe)}')
+        print(f'dataset len: {len(self.dataset)}')
 
         # filter out too long prompts
         if self.filter_overlong_prompts:
@@ -72,16 +73,16 @@ class RubricRMDataset(Dataset):
 
             self.dataset = valid_dataset
 
-            print(f'filter dataset len: {len(self.dataframe)}')
+            print(f'filter dataset len: {len(self.dataset)}')
 
     def __len__(self):
-        return len(self.dataframe)
+        return len(self.dataset)
 
-    def __getitem__(self, item):
+    def __getitem__(self, index):
         """
         Note that we also return the raw_input_ids so that it can be combined with other chat template
         """
-        row_dict: dict = self.dataframe.iloc[item].to_dict()
+        row_dict = deepcopy(self.dataset[index])
 
         chat = row_dict.pop(self.prompt_key)
 

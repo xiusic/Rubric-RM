@@ -156,3 +156,4 @@ core
 *egg-info
 logs/
 outputs/
+wandb/
