@@ -17,8 +17,8 @@ export VERL_PPO_LOGGING_LEVEL="DEBUG"
 N_GPU=8
 
 # Model Setting
-# MODEL_PATH=/mnt/home/ziqi/checkpoints/Llama-3.1-8B-Instruct
-MODEL_PATH=/mnt/home/ziqi/checkpoints/llama3-skywork-v02-sft
+MODEL_PATH=/mnt/home/ziqi/checkpoints/Llama-3.1-8B-Instruct
+# MODEL_PATH=/mnt/home/ziqi/checkpoints/llama3-skywork-v02-sft
 
 
 # Training Setting
@@ -32,15 +32,15 @@ PPO_MINI_BS=128
 
 # Logging Setting
 PROJECT_NAME=rubric_rm
-EXPERIMENT_NAME=rubric_rm_LR${LR}_sft
+EXPERIMENT_NAME=rubric_rm_LR${LR}_filtered_grpo_kl
 
 # Reward Setting
 REWARD_PATH=./rubric_rm/verl/utils/reward_score/lm_as_judge.py
 REWARD_FUNC_NAME=lm_as_judge_match
 
 # Task
-TRAIN_TASK="gaotang/sky_v02_processed_llamma3"
-EVAL_TASK="gaotang/sky_v02_processed_llamma3"
+TRAIN_TASK="gaotang/sky_v02_filtered"
+EVAL_TASK="gaotang/sky_v02_filtered"
 
 # Incase the node has ray engine started.
 ray stop
