@@ -81,3 +81,9 @@ Model checkpoints:
 
 - `meta-llama/Llama-3.1-8B-Instruct` (original; untrained)
 - `gaotang/llama3-skywork-v02-sft` (sft)
+
+[Update 03/21]
+
+The latest data:
+
+- `gaotang/sky_v02_filtered` (filtered skywork data, containing 55k of the original 77k data)
