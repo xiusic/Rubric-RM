@@ -166,13 +166,11 @@ def main_task(config):
 
     compute_score = get_custom_reward_fn(config)
     reward_fn = reward_manager_cls(
-        tokenizer=tokenizer, num_examine=0, compute_score=compute_score,
+        tokenizer=tokenizer, num_examine=1, compute_score=compute_score,
     )
 
     # Note that we always use function-based RM for validation
-    val_reward_fn = reward_manager_cls(
-        tokenizer=tokenizer, num_examine=1, compute_score=compute_score,
-    )
+    val_reward_fn = reward_fn
 
     resource_pool_manager = ResourcePoolManager(
         resource_pool_spec=resource_pool_spec, mapping=mapping,
