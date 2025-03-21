@@ -16,8 +16,10 @@ def main():
     api = HfApi()
     api.delete_repo(args.hf_hub_path)
     api.create_repo(repo_id=args.hf_hub_path, private=False, exist_ok=True)
-    api.upload_folder(folder_path=args.model_path,
-                      repo_id=args.hf_hub_path, repo_type='model')
+    api.upload_folder(
+        folder_path=args.model_path,
+        repo_id=args.hf_hub_path, repo_type='model',
+    )
 
 
 if __name__ == '__main__':

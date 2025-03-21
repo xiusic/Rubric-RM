@@ -44,14 +44,19 @@ def merge_by_placement(tensors: list[torch.Tensor], placement: Placement):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--local_dir', required=True,
-                        type=str, help='The path for your saved model')
-    parser.add_argument('--hf_upload_path', default=False, type=str,
-                        help='The path of the huggingface repo to upload')
+    parser.add_argument(
+        '--local_dir', required=True,
+        type=str, help='The path for your saved model',
+    )
+    parser.add_argument(
+        '--hf_upload_path', default=False, type=str,
+        help='The path of the huggingface repo to upload',
+    )
     args = parser.parse_args()
 
     assert not args.local_dir.endswith(
-        'huggingface'), 'The local_dir should not end with huggingface'
+        'huggingface',
+    ), 'The local_dir should not end with huggingface'
     local_dir = args.local_dir
 
     # copy rank zero to find the shape of (dp, fsdp)
@@ -78,7 +83,8 @@ if __name__ == '__main__':
     print(f'Got device mesh {mesh}, mesh_dim_names {mesh_dim_names}')
 
     assert mesh_dim_names in (
-        ('fsdp',),), f'Unsupported mesh_dim_names {mesh_dim_names}'
+        ('fsdp',),
+    ), f'Unsupported mesh_dim_names {mesh_dim_names}'
 
     if 'tp' in mesh_dim_names:
         # fsdp * tp
@@ -97,9 +103,11 @@ if __name__ == '__main__':
 
     def process_one_shard(rank):
         model_path = os.path.join(
-            local_dir, f'model_world_size_{world_size}_rank_{rank}.pt')
+            local_dir, f'model_world_size_{world_size}_rank_{rank}.pt',
+        )
         state_dict = torch.load(
-            model_path, map_location='cpu', weights_only=False)
+            model_path, map_location='cpu', weights_only=False,
+        )
         model_state_dict_lst[rank] = state_dict
         return state_dict
 
@@ -159,7 +167,8 @@ if __name__ == '__main__':
         auto_model = AutoModelForVision2Seq
     else:
         raise NotImplementedError(
-            f'Unknown architecture {config.architectures}')
+            f'Unknown architecture {config.architectures}',
+        )
 
     with torch.device('meta'):
         model = auto_model.from_config(config, torch_dtype=torch.bfloat16)
@@ -175,7 +184,11 @@ if __name__ == '__main__':
         from huggingface_hub import HfApi
 
         api = HfApi()
-        api.create_repo(repo_id=args.hf_upload_path,
-                        private=False, exist_ok=True)
-        api.upload_folder(folder_path=hf_path,
-                          repo_id=args.hf_upload_path, repo_type='model')
+        api.create_repo(
+            repo_id=args.hf_upload_path,
+            private=False, exist_ok=True,
+        )
+        api.upload_folder(
+            folder_path=hf_path,
+            repo_id=args.hf_upload_path, repo_type='model',
+        )
