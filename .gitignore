@@ -157,3 +157,4 @@ core
 logs/
 outputs/
 wandb/
+checkpoints/
