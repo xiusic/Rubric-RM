@@ -76,3 +76,8 @@ Reward functions that we use are implemented by the following two files
 - `train/OpenRLHF/custom_reward_function.py`
 
 Note that the first one is preferred after experiments.
+
+Model checkpoints:
+
+- `meta-llama/Llama-3.1-8B-Instruct` (original; untrained)
+- `gaotang/llama3-skywork-v02-sft` (sft)
