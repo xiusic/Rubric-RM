@@ -17,7 +17,7 @@ export VERL_PPO_LOGGING_LEVEL="INFO"
 N_GPU=8
 
 # Model Setting
-MODEL_PATH="MODEL"
+MODEL_PATH=/mnt/home/ziqi/checkpoints/Llama-3.1-8B-Instruct
 
 
 # Training Setting

@@ -154,3 +154,5 @@ core
 
 # custom
 *egg-info
+logs/
+outputs/

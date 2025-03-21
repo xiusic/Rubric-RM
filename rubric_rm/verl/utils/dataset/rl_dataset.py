@@ -3,6 +3,7 @@ from __future__ import annotations
 import verl.utils.torch_functional as verl_F
 from datasets import load_dataset
 from torch.utils.data import Dataset
+from tqdm import tqdm
 from transformers import PreTrainedTokenizer
 from transformers import ProcessorMixin
 from verl.utils.model import compute_position_id_with_mask
@@ -65,7 +66,7 @@ class RubricRMDataset(Dataset):
 
             valid_dataset = []
 
-            for data_point in self.dataset:
+            for data_point in tqdm(self.dataset, desc='Filtering Dataset'):
                 if len(tokenizer.apply_chat_template(data_point[prompt_key], add_generation_prompt=True)) <= self.max_prompt_length:
                     valid_dataset.append(data_point)
 
