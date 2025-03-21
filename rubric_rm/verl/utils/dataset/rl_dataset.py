@@ -29,7 +29,7 @@ class RubricRMDataset(Dataset):
     ):
 
         self.files = files
-        assert files == 'gaotang/sky_v02_processed_llamma3', ValueError(
+        assert files.startswith('gaotang/'), ValueError(
             'hard coded check.',
         )
         self.tokenizer = tokenizer
