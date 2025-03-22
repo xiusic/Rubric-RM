@@ -64,3 +64,36 @@ def lm_as_judge_match(
             raise NotImplementedError('Check your dataset label!')
     else:
         return -1.0
+
+
+
+
+### Strict format here:
+
+# pattern_strict = re.compile(
+#     r'^'
+#     # optional whitespace, then <rubric> with non-whitespace content
+#     r'\s*<rubric>\s*(\S(?:.*?\S)?)\s*</rubric>'
+#     # only whitespace allowed between </rubric> and <eval>
+#     r'\s*<eval>\s*(\S(?:.*?\S)?)\s*</eval>'
+#     # only whitespace allowed between </eval> and <answer>
+#     r'\s*<answer>\s*(\S(?:.*?\S)?)\s*</answer>\s*'
+#     r'$',
+#     re.DOTALL
+# )
+
+# def validate_string_format_strict(s: str) -> bool:
+#     """
+#     Enforces this strict format:
+#       [optional whitespace]
+#       <rubric> (non-whitespace content) </rubric>
+#       [only whitespace allowed in between]
+#       <eval>   (non-whitespace content) </eval>
+#       [only whitespace allowed in between]
+#       <answer> (non-whitespace content) </answer>
+#       [optional whitespace]
+      
+#     'Non-whitespace content' means at least one real character – not just spaces/tabs/newlines.
+#     Returns True if 's' matches exactly that structure; otherwise False.
+#     """
+#     return bool(pattern_strict.match(s))
