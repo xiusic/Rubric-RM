@@ -182,7 +182,7 @@ def convert_sky_data_single(input):
     answer = input[1]['content']
     return question, answer 
 
-def convert_sky_data_multi(input, assistant_name="Chatbot A"):
+def convert_sky_data_multi(input, assistant_name="Chatbot"):
     result_parts = []
     for entry in input:
         role = entry['role']
@@ -221,7 +221,7 @@ def collect_skywork_reward():
             else:
                 single = False 
 
-                
+
             if single:
                 question_chosen, answer_chosen = convert_sky_data_single(item['chosen'])
                 question_rej, answer_rej = convert_sky_data_single(item['rejected'])
@@ -247,16 +247,16 @@ def collect_skywork_reward():
                 CURRENT_NUM += 1 
 
             else:
-                conversation_chosen = convert_sky_data_multi(item['chosen'])
-                conversation_rej = convert_sky_data_multi(item['rejected'])
+                # conversation_chosen = convert_sky_data_multi(item['chosen'], assistant_name="Chatbot")
+                # conversation_rej = convert_sky_data_multi(item['rejected'], assistant_name="Chatbot")
 
                 if CURRENT_NUM % 2 == 0:
-                    conversation_1 = conversation_chosen
-                    conversation_2 = conversation_rej
+                    conversation_1 = convert_sky_data_multi(item['chosen'], assistant_name="Chatbot A")
+                    conversation_2 = convert_sky_data_multi(item['rejected'], assistant_name="Chatbot B")
                     winner.append('model_a')
                 else:
-                    conversation_1 = conversation_rej
-                    conversation_2 = conversation_chosen
+                    conversation_1 = convert_sky_data_multi(item['rejected'], assistant_name="Chatbot A")
+                    conversation_2 = convert_sky_data_multi(item['chosen'], assistant_name="Chatbot B")
                     winner.append('model_b') 
                 
                 curr_prompt = copy.deepcopy(prompt_template_multi) 
@@ -275,12 +275,108 @@ def collect_skywork_reward():
     })
 
     return dataset 
- 
+
+
+def collect_code_data():
+    global CURRENT_NUM 
+    dataset = load_dataset("Vezora/Code-Preference-Pairs", split="train")  # 'train' split as an example
+    shuffled = dataset.shuffle(seed=42)
+    subset_15k = shuffled.select(range(2_500))
+    remainder = shuffled.select(range(2_500, len(shuffled)))
+
+    context_messages = []
+    winner = []
+
+    for item in subset_15k:
+        question = item['input']
+        answer_chosen = item['accepted']
+        answer_rej = item['rejected']
+
+        if CURRENT_NUM % 2 == 0:
+            answer_a = answer_chosen
+            answer_b = answer_rej
+            winner.append('model_a')
+        else:
+            answer_a = answer_rej
+            answer_b = answer_chosen
+            winner.append('model_b')
+        
+
+        curr_prompt = copy.deepcopy(prompt_template_single) 
+        curr_prompt[1]['content'] = curr_prompt[1]['content'].format(
+            question=question,
+            answer_a=answer_a,
+            answer_b=answer_b
+        )
+
+        context_messages.append(curr_prompt)
+        CURRENT_NUM += 1 
+    
+    dataset = Dataset.from_dict({
+        'context_messages': context_messages,
+        'winner': winner
+    })
+
+    return dataset, remainder
+
+
+def collect_math_data():
+    global CURRENT_NUM 
+    dataset = load_dataset("prhegde/preference-data-math-stack-exchange", split='train')  # 'train' split as an example
+
+    context_messages = []
+    winner = []
+
+    for item in dataset:
+        question = item['question']
+        answer_chosen = item['chosen']
+        answer_rej = item['rejected']
+
+        if CURRENT_NUM % 2 == 0:
+            answer_a = answer_chosen
+            answer_b = answer_rej
+            winner.append('model_a')
+        else:
+            answer_a = answer_rej
+            answer_b = answer_chosen
+            winner.append('model_b')
+        
+
+        curr_prompt = copy.deepcopy(prompt_template_single) 
+        curr_prompt[1]['content'] = curr_prompt[1]['content'].format(
+            question=question,
+            answer_a=answer_a,
+            answer_b=answer_b
+        )
+
+        context_messages.append(curr_prompt)
+        CURRENT_NUM += 1 
+    
+    dataset = Dataset.from_dict({
+        'context_messages': context_messages,
+        'winner': winner
+    })
+
+    return dataset
+
 
 def new_dataset_sky():
-    ds = collect_skywork_reward()
-    ds.push_to_hub("gaotang/sky_v02_filtered")
-    print(Counter(ds["winner"]))
+    ds_sky = collect_skywork_reward()
+    ds_sky.push_to_hub("gaotang/skywork-v02-filtered")
+    print("Sky pushed")
+    ds_code, ds_code_remainder = collect_code_data()
+    ds_math = collect_math_data()
+    ds_sky_code = concatenate_datasets([ds_sky, ds_code])
+    ds_sky_code.push_to_hub("gaotang/sky_v02_filtered_2_5kcode_sky_code")
+    print("Sky code pushed")
+
+    ds_sky_code_math = concatenate_datasets([ds_math, ds_code, ds_sky])
+    ds_sky_code_math.push_to_hub("gaotang/sky_v02_filtered_2_5kcode_18kmath_math_code_sky")
+    print("Sky code math pushed")
+    ds_code_remainder.push_to_hub("gaotang/code_reminder_2_5k")
+    print("Code remainder pushed")
+
+    # print(Counter(ds["winner"]))
 
 
 if __name__ == '__main__':

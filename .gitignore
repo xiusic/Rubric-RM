@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 
 train/OpenRLHF/wandb
+data_gen 
 
 # C extensions
 *.so
