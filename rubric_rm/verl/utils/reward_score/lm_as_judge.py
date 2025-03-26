@@ -44,12 +44,12 @@ def lm_as_judge_match(
     ground_truth,
     extra_info,
 ):
-    pred = solution_str.split(
-        '</eval>',
-    )[-1].strip() if '</eval>' in solution_str else 'error'
-    answer = ground_truth
 
-    if validate_string_format(pred):
+    if validate_string_format(solution_str):
+        pred = solution_str.split(
+        '</eval>',
+        )[-1].strip() if '</eval>' in solution_str else 'error'
+        answer = ground_truth
         if answer == 'model_a':
             if '[[A]]' in pred and '[[B]]' not in pred:
                 return 1.0
