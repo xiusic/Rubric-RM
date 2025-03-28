@@ -486,8 +486,8 @@ def format_judge_answers(question, answer_a, answer_b, multi_turn=False, model_m
             **kwargs,
         )
     elif model_modifier == "sft_new":
-        system_prompt = MTBENCH_RUBRIC_RL_new['system_prompt']
-        user_prompt = MTBENCH_RUBRIC_RL_new["prompt_template"].format(
+        system_prompt = MTBENCH_SFT_new['system_prompt']
+        user_prompt = MTBENCH_SFT_new["prompt_template"].format(
             question=question,
             answer_a=answer_a[1]["content"],
             answer_b=answer_b[1]["content"],
@@ -681,9 +681,9 @@ def process_judgement(judgment, model_modifier):
         else:
             return "error"
     elif model_modifier == "sft_new":
-        if judgment == "model_a":
+        if judgment == "A":
             return "A"
-        elif judgment == "model_b":
+        elif judgment == "B":
             return "B"
         else:
             return "error"
