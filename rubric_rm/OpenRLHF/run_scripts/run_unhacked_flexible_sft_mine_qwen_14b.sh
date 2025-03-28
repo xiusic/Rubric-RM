@@ -12,7 +12,7 @@ META_PREFIX="/shared/nas2/xiusic/gaotang"
 
 # The model save path is handled for you, format: meta-storage-path / dataset-name / ckpt / model-setting
 USE_MODEL="Qwen/Qwen2.5-14B-Instruct"
-SAVE_MODEL_NAME="qwen2_5-14b-filtered-sky-2_5kcode-18kmath-grpo-flexible-reward-kl-1e-3"
+SAVE_MODEL_NAME="qwen2_5-14b-filtered-sky-2_5kcode-18kmath-grpo-flexible-reward-kl-1e-3-lr-1e-6"
 SAVE_MODEL_PREFIX="$META_PREFIX/skylab-v02/ckpt"
 SAVE_PATH="$SAVE_MODEL_PREFIX/$SAVE_MODEL_NAME"
 VERBOSE_DIR="$META_PREFIX/skylab-v02/logs/$SAVE_MODEL_NAME"
@@ -43,7 +43,7 @@ ray job submit --address="http://127.0.0.1:8265" \
    --advantage_estimator group_norm \
    --zero_stage 3 \
    --bf16 \
-   --actor_learning_rate 5e-7 \
+   --actor_learning_rate 1e-6 \
    --prompt_data $DATASET_PATH \
    --input_key context_messages \
    --label_key winner \
