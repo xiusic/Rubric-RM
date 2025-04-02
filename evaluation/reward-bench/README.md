@@ -17,3 +17,13 @@ CUDA_VISIBLE_DEVICES=0 python scripts/run_generative.py --model /shared/nas2/xiu
 
 CUDA_VISIBLE_DEVICES=0 python scripts/run_generative.py --model /shared/nas2/xiusic/gaotang/skylab-v02-math-18k-code-2_5k-baseline/ckpt/qwen-14b-sft-adjusted --model_save_name qwen-14b-sft-math-code-sky --sft_new --vllm_gpu_util 0.9
 ```
+
+ICL vs original:
+
+```
+CUDA_VISIBLE_DEVICES=0 python scripts/run_generative.py --model Qwen/Qwen2.5-7B-Instruct --model_save_name qwen-7b-original --sft_new --vllm_gpu_util 0.45
+
+CUDA_VISIBLE_DEVICES=5 python scripts/run_generative.py --model Qwen/Qwen2.5-7B-Instruct --model_save_name qwen-7b-original --icl --vllm_gpu_util 0.85
+
+CUDA_VISIBLE_DEVICES=5 python scripts/run_generative.py --model /shared/nas2/xiusic/gaotang/skylab-v02-math-18k-code-2_5k-baseline/ckpt/qwen-7b-sft-adjusted --model_save_name qwen-7b-sft --icl --vllm_gpu_util 0.85
+```

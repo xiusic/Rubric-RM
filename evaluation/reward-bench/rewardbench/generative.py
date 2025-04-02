@@ -30,7 +30,10 @@ from fastchat.conversation import get_conv_template
 from google.generativeai.types import HarmBlockThreshold, HarmCategory
 from openai import OpenAI
 from together import Together
+from pathlib import Path
 
+
+import numpy as np 
 ANTHROPIC_MODEL_LIST = (
     "claude-1",
     "claude-2",
@@ -269,6 +272,29 @@ MTBENCH_SFT_new = {
     "output_format": "A",
 }
 
+MTBENCH_ICL = {
+    "name": 'Demonstrations',
+    'type': 'pairwise',
+    'system_prompt': "Please act as an impartial judge and evaluate the quality of the responses provided by two AI chatbots. "
+            "You should choose the chatbot that follows the client's instructions and answers the client's question better. "
+            "Do not allow the length of the responses to influence your evaluation. Do not favor certain names "
+            "of the chatbots. Be as objective as possible. Output your final verdict directly by strictly following this format: "
+            '"A" if Chatbot A is better, "B" if Chatbot B is better. '
+            "You will be given some demonstration pairs to learn from.",
+    "prompt_template": 
+     "{demonstration}\n\n\n"
+     "[Client Question]\n{question}\n\n[The Start of Chatbot A's Answer]\n{answer_a}\n[The End of Chatbot A's Answer]\n\n"
+     "[The Start of Chatbot B's Answer]\n{answer_b}\n[The End of Chatbot B's Answer]\n[Preferred Chatbot Answer] ",
+    "description": "Prompt for general questions",
+    "category": "general",
+    "output_format": "A",
+}
+
+LONG_RETRIEVE_PROMPT = (
+    "[Client Question]\n{question}\n\n[The Start of Chatbot A's Answer]\n{answer_a}\n[The End of Chatbot A's Answer]\n\n"
+    "[The Start of Chatbot B's Answer]\n{answer_b}\n[The End of Chatbot B's Answer]"
+)
+
 MTBENCH_RUBRIC_RL_RUBRIC = {
     "name": 'rubric-rl',
     'type': 'pairwise',
@@ -427,9 +453,30 @@ Response B:
 {assistant_response_b}
 ```"""
 
+openai_helper_save_dict = {}
+
+def embed_openai(text, model="text-embedding-3-large"):
+    response = openai.embeddings.create(input=text, model=model)
+    return np.array(response.data[0].embedding, dtype=np.float32)
+
+def retrieve_long_query_openai(query_text, index, id_to_item, top_k=3, norm=True):
+    emb = embed_openai(query_text)
+    if norm:
+        emb = emb / np.linalg.norm(emb)
+    D, I = index.search(np.array([emb], dtype=np.float32), top_k)
+    return [(id_to_item[str(i)], D[0][idx]) for idx, i in enumerate(I[0])]
+
+
+def retrieve(new_query, model, index, id_to_content, top_k=3):
+    emb = model.encode(new_query, convert_to_numpy=True, normalize_embeddings=True)
+    D, I = index.search(np.array([emb]), top_k)
+    results = [(id_to_content[str(i)], D[0][idx]) for idx, i in enumerate(I[0])]
+    return results
 
 # format with prompt_template.format(question=question, answer_a=answer_a, answer_b=answer_b)
-def format_judge_answers(question, answer_a, answer_b, multi_turn=False, model_modifier=None):
+def format_judge_answers(question, answer_a, answer_b, multi_turn=False, model_modifier=None,
+                         retrieval_model=None, retrieval_index=None, id_to_content=None,
+                         meta_dir=None, top_k=3):
     kwargs = {}
     if model_modifier == "prometheus":
         if multi_turn:
@@ -493,6 +540,80 @@ def format_judge_answers(question, answer_a, answer_b, multi_turn=False, model_m
             answer_b=answer_b[1]["content"],
             **kwargs,
         )
+    elif model_modifier == "icl":
+        system_prompt = MTBENCH_ICL['system_prompt']
+
+        # print(system_prompt)
+        # exit()
+        # Retrieve: 
+        retrieve_result = retrieve(new_query=question, 
+                                   model=retrieval_model,
+                                   index=retrieval_index,
+                                   id_to_content=id_to_content,
+                                   top_k=top_k)
+        text = [i[0] for i in retrieve_result]
+        demonstration = "\n\n\n".join(text)
+
+
+        user_prompt = MTBENCH_ICL["prompt_template"].format(
+            demonstration=demonstration,
+            question=question,
+            answer_a=answer_a[1]["content"],
+            answer_b=answer_b[1]["content"],
+            **kwargs,
+        )
+    elif model_modifier == "icl_openai":
+        global openai_helper_save_dict
+        system_prompt = MTBENCH_ICL['system_prompt']
+
+        query_text = LONG_RETRIEVE_PROMPT.format(
+            question=question,
+            answer_a=answer_a[1]["content"],
+            answer_b=answer_b[1]["content"],
+        )
+        
+        if meta_dir is not None and os.path.isfile(meta_dir / f"reward_bench_top_{top_k}.json"):
+            with open(meta_dir / f"reward_bench_top_{top_k}.json") as f:
+                record_result = json.load(f) 
+            if query_text in record_result:
+                demonstration = record_result[query_text] 
+            else:
+                retrieve_result = retrieve_long_query_openai(
+                    query_text=query_text,
+                    index=retrieval_index,
+                    id_to_item=id_to_content,
+                    top_k=top_k,
+                    norm=True
+                )
+                text = [i[0]['content'] for i in retrieve_result]
+                demonstration = "\n\n\n".join(text)
+                openai_helper_save_dict = record_result
+                openai_helper_save_dict[query_text] = demonstration 
+                with open(meta_dir / f"reward_bench_top_{top_k}.json", 'w') as f:
+                    json.dump(openai_helper_save_dict, f, indent=2) 
+        else:
+            retrieve_result = retrieve_long_query_openai(
+                query_text=query_text,
+                index=retrieval_index,
+                id_to_item=id_to_content,
+                top_k=top_k,
+                norm=True
+            )
+            text = [i[0]['content'] for i in retrieve_result]
+            demonstration = "\n\n\n".join(text)
+            openai_helper_save_dict[query_text] = demonstration 
+            with open(meta_dir / f"reward_bench_top_{top_k}.json", 'w') as f:
+                json.dump(openai_helper_save_dict, f, indent=2) 
+
+        user_prompt = MTBENCH_ICL["prompt_template"].format(
+            demonstration=demonstration,
+            question=question,
+            answer_a=answer_a[1]["content"],
+            answer_b=answer_b[1]["content"],
+            **kwargs,
+        )
+
+        # print(user_prompt)
     elif model_modifier == "rubric":
         system_prompt = MTBENCH_RUBRIC["system_prompt"]
         user_prompt = MTBENCH_RUBRIC["prompt_template"].format(
@@ -680,7 +801,7 @@ def process_judgement(judgment, model_modifier):
             return "B"
         else:
             return "error"
-    elif model_modifier == "sft_new":
+    elif model_modifier == "sft_new" or model_modifier == "icl" or model_modifier == "icl_openai":
         if judgment == "A":
             return "A"
         elif judgment == "B":

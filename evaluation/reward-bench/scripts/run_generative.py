@@ -34,6 +34,10 @@ from fastchat.conversation import get_conv_template
 from transformers import AutoTokenizer
 from vllm import LLM, SamplingParams
 
+from sentence_transformers import SentenceTransformer
+import faiss
+from pathlib import Path
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from rewardbench import load_eval_dataset, save_to_hub
@@ -48,7 +52,7 @@ from rewardbench.generative import (
     run_judge_pair,
 )
 from rewardbench.utils import calculate_scores_per_section
-
+import openai 
 # get token from HF_TOKEN env variable, but if it doesn't exist pass none
 HF_TOKEN = os.getenv("HF_TOKEN", None)
 # this is necessary to automatically log in when running this script in docker/batch beaker jobs
@@ -109,6 +113,12 @@ def get_args():
     )
     parser.add_argument(
         '--sft_new', action='store_true', default=False, help='use sft chat template for models that use a rubric'
+    )
+    parser.add_argument(
+        '--icl', action='store_true', default=False, help='use sft chat template for models that use a rubric'
+    )
+    parser.add_argument(
+        '--icl_openai', action='store_true', default=False, help='use sft chat template for models that use a rubric'
     )
     parser.add_argument(
         '--rubric_rl_rubric', action='store_true', default=False, help='use rubric_rl chat template for models that use a rubric'
@@ -211,6 +221,10 @@ def main():
         model_modifier = 'sft'
     if args.sft_new:
         model_modifier = "sft_new"
+    if args.icl:
+        model_modifier = "icl"
+    if args.icl_openai:
+        model_modifier = "icl_openai"
     if args.rubric_rl_new:
         model_modifier = 'rubric_rl_new'
 
@@ -355,6 +369,37 @@ def main():
         # Run model weights with vllm
         ############################
 
+        if model_modifier == "icl":
+
+            
+        
+            retrieval_model = SentenceTransformer("mixedbread-ai/mxbai-embed-large-v1")
+            retrieval_index = faiss.read_index("/shared/nas2/xiusic/Rubric-RM/evaluation/notebook/corpus_faiss.index")
+
+            with open("/shared/nas2/xiusic/Rubric-RM/evaluation/notebook/corpus_id_to_content.json") as f:
+                id_to_content = json.load(f)
+            meta_dir=None
+        elif model_modifier == "icl_openai":
+
+            def get_openai_key(dir="/shared/nas2/xiusic/openai_key.txt"):
+                with open(dir, 'r') as f:
+                    key = f.read()
+                return key 
+
+            key = get_openai_key()
+            openai.api_key = key 
+            meta_dir = Path("/shared/nas2/xiusic/Rubric-RM/RAG/sky_filtered_code_2_5k_math_18k")  
+            norm = "normalized"
+            retrieval_model = "openai"
+            retrieval_index = faiss.read_index(f"{meta_dir}/{norm}_corpus.index")
+            with open(meta_dir / f"{norm}_id_to_item.json") as f:
+                id_to_content = json.load(f)
+        else:
+            retrieval_model=None
+            retrieval_index=None
+            id_to_content=None
+            meta_dir=None
+            
         def format_judgements(batch, optional_chat_template=None):
             # TODO expand this to include fastchat chat templates if needed
             mult_turn = True if len(batch["text_chosen"]) > 2 else False
@@ -374,7 +419,12 @@ def main():
                 answer_a, answer_b = answer_b, answer_a
 
             system_prompt, user_prompt = format_judge_answers(
-                prompt, answer_a, answer_b, multi_turn=mult_turn, model_modifier=model_modifier
+                prompt, answer_a, answer_b, multi_turn=mult_turn, model_modifier=model_modifier,
+                retrieval_model=retrieval_model,
+                retrieval_index=retrieval_index,
+                id_to_content=id_to_content,
+                meta_dir=meta_dir,
+                top_k=3
             )
 
             # if np.random.rand() < 0.01:
@@ -471,6 +521,12 @@ def main():
                 json.dump(answers, file, indent=4)
         elif args.sft_new:
             with open(f"./result/answers{ds_string}_sft_new_{args.model_save_name}.json", "w") as file:
+                json.dump(answers, file, indent=4)
+        elif args.icl:
+            with open(f"./result/answers{ds_string}_icl_{args.model_save_name}.json", "w") as file:
+                json.dump(answers, file, indent=4)
+        elif args.icl_openai:
+            with open(f"./result/answers{ds_string}_icl_openai_{args.model_save_name}.json", "w") as file:
                 json.dump(answers, file, indent=4)
         elif args.rubric:
             with open(f"./output/answers{ds_string}_rubric.json", "w") as file:

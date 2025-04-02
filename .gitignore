@@ -5,6 +5,9 @@ __pycache__/
 
 train/OpenRLHF/wandb
 data_gen 
+evaluation/JudgeLM 
+evaluation/notebook 
+RAG 
 
 # C extensions
 *.so
