@@ -272,6 +272,43 @@ MTBENCH_SFT_new = {
     "output_format": "A",
 }
 
+MTBENCH_SFT_new_user = {
+    "name": 'SFT-new',
+    'type': 'pairwise',
+    'system_prompt': "Please act as an impartial judge and evaluate the quality of the responses provided by two AI assistants. "
+            "You should choose the assistant that follows the user's instructions and answers the user's question better. "
+            "Do not allow the length of the responses to influence your evaluation. Do not favor certain names "
+            "of the assistants. Be as objective as possible. Output your final verdict directly by strictly following this format: "
+            '"A" if Assistant A is better, "B" if Assistant B is better.',
+    "prompt_template": 
+     "[User Question]\n{question}\n\n[The Start of Assistant A's Response]\n{answer_a}\n[The End of Assistant A's Response]\n\n"
+     "[The Start of Assistant B's Response]\n{answer_b}\n[The End of Assistant B's Response]",
+    "description": "Prompt for general questions",
+    "category": "general",
+    "output_format": "A",
+}
+
+MTBENCH_Guideline = {
+    "name": 'SFT-new',
+    'type': 'pairwise',
+    'system_prompt': "Please act as an impartial judge and evaluate the quality of the responses provided by two AI assistants. "
+            # "You should choose the assistant that follows the user's instructions and answers the user's question better. "
+            "Do not allow the length of the responses to influence your evaluation. Do not favor certain names of the assistants. "
+            "Enclose your detailed evaluation in <eval> and </eval>. "
+            "After providing your explanation, "
+            "output your final verdict by strictly following this format: '[[A]]' if Assistant A is better, '[[B]]' if Assistant B is better."
+            "i.e., <eval>detailed evaluation here</eval>\n\n<answer>[[A/B]]</answer>.\n"
+            "Use evidence from the assistant's responses to guide your evaluation. You can apply different strategies based on the type of question:\n"
+            "- For reasoning questions (math, coding), your evaluation should focus on correctness, intermediate steps, key details, and overall helpfulness.\n"
+            "- For non-reasoning questions (chat, safety), your evaluation should follow the guidelines below:\n{Guideline_document}",
+    "prompt_template": 
+     "[User Question]\n{question}\n\n[The Start of Assistant A's Response]\n{answer_a}\n[The End of Assistant A's Response]\n\n"
+     "[The Start of Assistant B's Response]\n{answer_b}\n[The End of Assistant B's Response]",
+    "description": "Prompt for general questions",
+    "category": "general",
+    "output_format": "A",
+}
+
 MTBENCH_ICL = {
     "name": 'Demonstrations',
     'type': 'pairwise',
@@ -476,7 +513,8 @@ def retrieve(new_query, model, index, id_to_content, top_k=3):
 # format with prompt_template.format(question=question, answer_a=answer_a, answer_b=answer_b)
 def format_judge_answers(question, answer_a, answer_b, multi_turn=False, model_modifier=None,
                          retrieval_model=None, retrieval_index=None, id_to_content=None,
-                         meta_dir=None, top_k=3):
+                         meta_dir=None, top_k=3,
+                         guideline_document=None):
     kwargs = {}
     if model_modifier == "prometheus":
         if multi_turn:
@@ -535,6 +573,14 @@ def format_judge_answers(question, answer_a, answer_b, multi_turn=False, model_m
     elif model_modifier == "sft_new":
         system_prompt = MTBENCH_SFT_new['system_prompt']
         user_prompt = MTBENCH_SFT_new["prompt_template"].format(
+            question=question,
+            answer_a=answer_a[1]["content"],
+            answer_b=answer_b[1]["content"],
+            **kwargs,
+        )
+    elif model_modifier == "sft_new_user":
+        system_prompt = MTBENCH_SFT_new_user['system_prompt']
+        user_prompt = MTBENCH_SFT_new_user["prompt_template"].format(
             question=question,
             answer_a=answer_a[1]["content"],
             answer_b=answer_b[1]["content"],
@@ -614,6 +660,18 @@ def format_judge_answers(question, answer_a, answer_b, multi_turn=False, model_m
         )
 
         # print(user_prompt)
+    elif model_modifier == "guideline":
+        system_prompt = MTBENCH_Guideline["system_prompt"].format(
+            Guideline_document=guideline_document
+        )
+        # print(system_prompt)
+        # exit()
+        user_prompt = MTBENCH_RUBRIC["prompt_template"].format(
+            question=question,
+            answer_a=answer_a[1]["content"],
+            answer_b=answer_b[1]["content"],
+            **kwargs,
+        )
     elif model_modifier == "rubric":
         system_prompt = MTBENCH_RUBRIC["system_prompt"]
         user_prompt = MTBENCH_RUBRIC["prompt_template"].format(
@@ -801,7 +859,7 @@ def process_judgement(judgment, model_modifier):
             return "B"
         else:
             return "error"
-    elif model_modifier == "sft_new" or model_modifier == "icl" or model_modifier == "icl_openai":
+    elif model_modifier == "sft_new" or model_modifier == "icl" or model_modifier == "icl_openai" or model_modifier == "sft_new_user":
         if judgment == "A":
             return "A"
         elif judgment == "B":

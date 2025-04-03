@@ -115,10 +115,16 @@ def get_args():
         '--sft_new', action='store_true', default=False, help='use sft chat template for models that use a rubric'
     )
     parser.add_argument(
+        '--sft_new_user', action='store_true', default=False, help='use sft chat template for models that use a rubric'
+    )
+    parser.add_argument(
         '--icl', action='store_true', default=False, help='use sft chat template for models that use a rubric'
     )
     parser.add_argument(
         '--icl_openai', action='store_true', default=False, help='use sft chat template for models that use a rubric'
+    )
+    parser.add_argument(
+        '--guideline', action='store_true', default=False, help='use sft chat template for models that use a rubric'
     )
     parser.add_argument(
         '--rubric_rl_rubric', action='store_true', default=False, help='use rubric_rl chat template for models that use a rubric'
@@ -221,10 +227,14 @@ def main():
         model_modifier = 'sft'
     if args.sft_new:
         model_modifier = "sft_new"
+    if args.sft_new_user:
+        model_modifier = "sft_new_user"
     if args.icl:
         model_modifier = "icl"
     if args.icl_openai:
         model_modifier = "icl_openai"
+    if args.guideline:
+        model_modifier = "guideline"
     if args.rubric_rl_new:
         model_modifier = 'rubric_rl_new'
 
@@ -399,6 +409,16 @@ def main():
             retrieval_index=None
             id_to_content=None
             meta_dir=None
+
+        if model_modifier == "guideline":
+            file_path = "/shared/nas2/xiusic/Rubric-RM/document_guideline/model_spec_chat.txt"
+
+            with open(file_path, "r", encoding="utf-8") as file:
+                # Read the entire file into a single string
+                guideline_document = file.read()
+        else:
+            guideline_document = None 
+
             
         def format_judgements(batch, optional_chat_template=None):
             # TODO expand this to include fastchat chat templates if needed
@@ -424,12 +444,13 @@ def main():
                 retrieval_index=retrieval_index,
                 id_to_content=id_to_content,
                 meta_dir=meta_dir,
-                top_k=3
+                top_k=3,
+                guideline_document=guideline_document
             )
 
-            # if np.random.rand() < 0.01:
-            #     print("system_prompt:", system_prompt)
-            #     print("user_prompt:", user_prompt)
+            if np.random.rand() < 0.01:
+                print("system_prompt:", system_prompt)
+                print("user_prompt:", user_prompt)
 
             if optional_chat_template is not None:
                 optional_chat_template.set_system_message(system_prompt)
@@ -522,11 +543,17 @@ def main():
         elif args.sft_new:
             with open(f"./result/answers{ds_string}_sft_new_{args.model_save_name}.json", "w") as file:
                 json.dump(answers, file, indent=4)
+        elif args.sft_new_user:
+            with open(f"./result/answers{ds_string}_sft_new_user_{args.model_save_name}.json", "w") as file:
+                json.dump(answers, file, indent=4)
         elif args.icl:
             with open(f"./result/answers{ds_string}_icl_{args.model_save_name}.json", "w") as file:
                 json.dump(answers, file, indent=4)
         elif args.icl_openai:
             with open(f"./result/answers{ds_string}_icl_openai_{args.model_save_name}.json", "w") as file:
+                json.dump(answers, file, indent=4)
+        elif args.guideline:
+            with open(f"./result/answers{ds_string}_guideline_{args.model_save_name}.json", "w") as file:
                 json.dump(answers, file, indent=4)
         elif args.rubric:
             with open(f"./output/answers{ds_string}_rubric.json", "w") as file:

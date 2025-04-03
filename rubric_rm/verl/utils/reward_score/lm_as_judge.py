@@ -17,9 +17,17 @@ import re
 #
 # We wrap these in  .*?  (non-greedy, DOTALL) to allow anything around/between the tags.
 
+# pattern = re.compile(
+#     r'^'
+#     r'.*?<rubric>\s*(\S.*?\S|\S)\s*</rubric>'
+#     r'.*?<eval>\s*(\S.*?\S|\S)\s*</eval>'
+#     r'.*?<answer>\s*(\S.*?\S|\S)\s*</answer>'
+#     r'.*?$',
+#     re.DOTALL
+# )
+
 pattern = re.compile(
     r'^'
-    r'.*?<rubric>\s*(\S.*?\S|\S)\s*</rubric>'
     r'.*?<eval>\s*(\S.*?\S|\S)\s*</eval>'
     r'.*?<answer>\s*(\S.*?\S|\S)\s*</answer>'
     r'.*?$',
@@ -43,27 +51,55 @@ def lm_as_judge_match(
     solution_str,
     ground_truth,
     extra_info,
-):
-
+):  
     if validate_string_format(solution_str):
         pred = solution_str.split(
         '</eval>',
         )[-1].strip() if '</eval>' in solution_str else 'error'
-        answer = ground_truth
+        answer, score = ground_truth
         if answer == 'model_a':
             if '[[A]]' in pred and '[[B]]' not in pred:
-                return 1.0
+                return float(score)
             else:
-                return -1.0
+                return -0.5
         elif answer == 'model_b':
             if '[[B]]' in pred and '[[A]]' not in pred:
-                return 1.0
+                return float(score)
             else:
-                return -1.0
+                return -0.5
         else:
             raise NotImplementedError('Check your dataset label!')
     else:
         return -1.0
+    
+
+# Previous 
+# def lm_as_judge_match(
+#     data_source,
+#     solution_str,
+#     ground_truth,
+#     extra_info,
+# ):
+
+#     if validate_string_format(solution_str):
+#         pred = solution_str.split(
+#         '</eval>',
+#         )[-1].strip() if '</eval>' in solution_str else 'error'
+#         answer = ground_truth
+#         if answer == 'model_a':
+#             if '[[A]]' in pred and '[[B]]' not in pred:
+#                 return 1.0
+#             else:
+#                 return -1.0
+#         elif answer == 'model_b':
+#             if '[[B]]' in pred and '[[A]]' not in pred:
+#                 return 1.0
+#             else:
+#                 return -1.0
+#         else:
+#             raise NotImplementedError('Check your dataset label!')
+#     else:
+#         return -1.0
 
 
 
