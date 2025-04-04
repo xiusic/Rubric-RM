@@ -19,6 +19,29 @@ uv pip install -e .
 
 If the last line doesn't execute correctly, simply do `pip install -e .`.
 
+## Verl environment Installation
+Install verl
+
+```
+git clone https://github.com/volcengine/verl
+cd verl
+git checkout e49fb572bf85a8f0ef7124c898f509bd6d9832a1
+pip install -e .
+```
+
+Install vLLM
+
+```
+git clone https://github.com/vllm-project/vllm.git
+cd vllm
+git checkout ed6e9075d31e32c8548b480a47d1ffb77da1f54c
+git cherry-pick caac5c2e597b1780c3df54a537c34e6061c32cff
+VLLM_USE_PRECOMPILED=1 pip install --editable .
+```
+
+Please install exactly like this, even if you install vllm before, or installed by verl, any other vllm version will fail.
+
+
 ## How to run training 
 
 First login in your huggingface and wandb (you could use my wandb) as follows:
