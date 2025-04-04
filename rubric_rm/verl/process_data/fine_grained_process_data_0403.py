@@ -385,6 +385,88 @@ def collect_Inf_ORM_with_magpie_ultra():
     })
     return dataset 
 
+def collect_Inf_ORM_without_magpie_ultra():
+    global CURRENT_NUM 
+    ds = load_dataset("infly/INF-ORM-Preference-Magnitude-80K")
+
+    context_messages = []
+    winner = []
+    score = []
+
+    num_single, num = 0, 0
+    for item in ds['train']:
+        if item['source'] != "magpie_ultra":
+
+            input_chosen = item['chosen'] 
+            input_rej = item['rejected']
+            magnitude = item['magnitude']
+            if magnitude == 10:
+                curr_s  = 0.5
+            elif magnitude == 3:
+                curr_s  = 0.8
+            elif magnitude == 1:
+                curr_s  = 1.0
+            else:
+                raise NotImplementedError("Error")
+            curr_s = str(curr_s)
+            
+            num += 1
+            if (len(input_chosen) == 2 and input_chosen[0]['role'] == 'user' and input_chosen[1]['role'] == "assistant") \
+                and (len(input_rej) == 2 and input_rej[0]['role'] == 'user' and input_rej[1]['role'] == "assistant"):
+                single = True
+                num_single += 1  
+            else:
+                single = False 
+
+            if single:
+                question_chosen, answer_chosen = convert_sky_data_single(item['chosen'])
+                question_rej, answer_rej = convert_sky_data_single(item['rejected'])
+                assert question_chosen == question_rej
+
+                if CURRENT_NUM % 2 == 0:
+                    answer_a = answer_chosen
+                    answer_b = answer_rej
+                    winner.append(('model_a', curr_s))
+                else:
+                    answer_a = answer_rej
+                    answer_b = answer_chosen
+                    winner.append(('model_b', curr_s)) 
+                
+                curr_prompt = copy.deepcopy(prompt_template_guideline_single) 
+                curr_prompt[1]['content'] = curr_prompt[1]['content'].format(
+                    question=question_chosen,
+                    answer_a=answer_a,
+                    answer_b=answer_b
+                )
+
+                context_messages.append(curr_prompt)
+                CURRENT_NUM += 1 
+
+            else:
+                if CURRENT_NUM % 2 == 0:
+                    conversation_1 = convert_sky_data_multi(item['chosen'], assistant_name="Chatbot A")
+                    conversation_2 = convert_sky_data_multi(item['rejected'], assistant_name="Chatbot B")
+                    winner.append(('model_a', curr_s))
+                else:
+                    conversation_1 = convert_sky_data_multi(item['rejected'], assistant_name="Chatbot A")
+                    conversation_2 = convert_sky_data_multi(item['chosen'], assistant_name="Chatbot B")
+                    winner.append(('model_b', curr_s)) 
+                
+                curr_prompt = copy.deepcopy(prompt_template_guideline_multi) 
+                curr_prompt[1]['content'] = curr_prompt[1]['content'].format(
+                    conversation_1=conversation_1,
+                    conversation_2=conversation_2,
+                )
+
+                context_messages.append(curr_prompt)
+                CURRENT_NUM += 1 
+
+    print(f"Num_single {num_single}, total num: {num}")
+    dataset = Dataset.from_dict({
+        'context_messages': context_messages,
+        'winner': winner
+    })
+    return dataset 
 
             
 
@@ -513,12 +595,62 @@ def collect_code_data():
 
     return dataset, remainder
 
+def collect_code_data_guideline():
+    global CURRENT_NUM 
+    dataset = load_dataset("Vezora/Code-Preference-Pairs", split="train")  # 'train' split as an example
+    shuffled = dataset.shuffle(seed=42)
+    subset_15k = shuffled.select(range(3000))
+    remainder = shuffled.select(range(3000, len(shuffled)))
+
+    context_messages = []
+    winner = []
+
+    for item in subset_15k:
+        question = item['input']
+        answer_chosen = item['accepted']
+        answer_rej = item['rejected']
+
+        curr_s = 1.0
+        curr_s = str(curr_s) 
+
+        if CURRENT_NUM % 2 == 0:
+            answer_a = answer_chosen
+            answer_b = answer_rej
+            winner.append(('model_a', curr_s))
+        else:
+            answer_a = answer_rej
+            answer_b = answer_chosen
+            winner.append(('model_b', curr_s))
+        
+
+        curr_prompt = copy.deepcopy(prompt_template_guideline_single) 
+        curr_prompt[1]['content'] = curr_prompt[1]['content'].format(
+            question=question,
+            answer_a=answer_a,
+            answer_b=answer_b
+        )
+
+        context_messages.append(curr_prompt)
+        CURRENT_NUM += 1 
+    
+    dataset = Dataset.from_dict({
+        'context_messages': context_messages,
+        'winner': winner
+    })
+
+    return dataset, remainder
  
 
 def collect_orm_all():
     ds_orm = collect_Inf_ORM_with_magpie_ultra()
     ds_orm.push_to_hub("gaotang/entire_orm_guideline")
 
+
+def collect_no_imstart_orm_withcode():
+    ds_orm = collect_Inf_ORM_without_magpie_ultra() 
+    ds_code, ds_code_remainder = collect_code_data_guideline() 
+    ds_orm_code = concatenate_datasets([ds_orm, ds_code])
+    ds_orm_code.push_to_hub("gaotang/filtered_orm_guideline")
 
 
 # def new_dataset_sky():
@@ -542,5 +674,6 @@ def collect_orm_all():
 
 if __name__ == '__main__':
     # new_dataset_sky()
-    collect_orm_all()
+    # collect_orm_all()
+    collect_no_imstart_orm_withcode()
     
