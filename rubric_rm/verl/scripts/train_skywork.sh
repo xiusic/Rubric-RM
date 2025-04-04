@@ -13,12 +13,12 @@ set -x
 
 export VLLM_ATTENTION_BACKEND=XFORMERS
 export VLLM_USE_V1=0
-export VERL_PPO_LOGGING_LEVEL="DEBUG"
+export VERL_PPO_LOGGING_LEVEL="INFO"
 N_GPU=8
 
 # Model Setting
-MODEL_PATH=/mnt/home/ziqi/checkpoints/Llama-3.1-8B-Instruct
-# MODEL_PATH=/mnt/home/ziqi/hf_model/Qwen2.5-7B-Instruct
+# MODEL_PATH=/mnt/home/ziqi/checkpoints/Llama-3.1-8B-Instruct
+MODEL_PATH=/mnt/home/ziqi/hf_model/Qwen2.5-7B-Instruct
 # MODEL_PATH=/mnt/home/ziqi/checkpoints/llama3-skywork-v02-sft
 
 
@@ -33,15 +33,15 @@ PPO_MINI_BS=128
 
 # Logging Setting
 PROJECT_NAME=rubric_rm
-EXPERIMENT_NAME=rubric_rm_llama3_LR${LR}_new_filtered_code5k_math18k_grpo_kl_formatting_constraint
+EXPERIMENT_NAME=rubric_rm_qwen2.5_LR${LR}_entire_orm_guideline_grpo_kl_8k
 
 # Reward Setting
 REWARD_PATH=./rubric_rm/verl/utils/reward_score/lm_as_judge.py
 REWARD_FUNC_NAME=lm_as_judge_match
 
 # Task
-TRAIN_TASK="gaotang/sky_v02_filtered_2_5kcode_18kmath_math_code_sky"
-EVAL_TASK="gaotang/sky_v02_filtered_2_5kcode_18kmath_math_code_sky"
+TRAIN_TASK="gaotang/entire_orm_guideline"
+EVAL_TASK="gaotang/entire_orm_guideline"
 
 # Incase the node has ray engine started.
 ray stop
