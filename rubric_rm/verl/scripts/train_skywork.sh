@@ -40,6 +40,8 @@ REWARD_PATH=./rubric_rm/verl/utils/reward_score/lm_as_judge.py
 REWARD_FUNC_NAME=lm_as_judge_match
 
 # Task
+# TRAIN_TASK="gaotang/filtered_orm_guideline"
+# EVAL_TASK="gaotang/filtered_orm_guideline"
 TRAIN_TASK="gaotang/entire_orm_guideline"
 EVAL_TASK="gaotang/entire_orm_guideline"
 
