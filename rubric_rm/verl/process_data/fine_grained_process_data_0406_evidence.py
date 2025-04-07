@@ -210,21 +210,21 @@ prompt_template_rl_detailed_evidence_multi = [
 ]
 
 
-raw_text_evidence = (
-    "Please act as an impartial judge and evaluate the quality of the responses provided by two AI Chatbots to the Client's question or conversation displayed below.\n"
-    "Begin your evaluation by first generating the rubric items, and enclose them within <rubric> and </rubric> tags. " 
-    "Inside the <rubric> section, also include <justify>...</justify> to explain why you chose those rubric criteria. "
-    "Ensure your generated rubric is specific, clear, and tailored to compare the Chatbot responses in the context of the Client's question or conversation.\n"
-    "Then, compare the following two conversations between the Client and the AI Chatbots, and provide your evaluation according to the rubric items. " 
-    "Base your evaluation on the specific text of each Chatbot's response, and justify your evaluation by quoting or summarizing relevant parts of each response. " 
-    "Whenever you quote Chatbot A verbatim, enclose that text in <quote_A>...</quote_A>. " 
-    "Whenever you summarize or paraphrase Chatbot A, use <summary_A>...</summary_A>. " 
-    "Likewise, for Chatbot B, use <quote_B>...</quote_B> or <summary_B>...</summary_B>.\n"
-    "Enclose your complete evaluation explanation within <eval> and </eval> tags. Ensure that the order in which the responses are presented does not influence your decision, and do not let response length or Chatbot names affect your evaluation. Be as objective as possible.\n"
-    "After providing your explanation, output your final verdict by strictly following this format: "
-    "'<answer>[[A]]</answer>' if Chatbot A is better, or '<answer>[[B]]</answer>' if Chatbot B is better.\n"
-    "i.e., <rubric> rubric items here <justify> justification for rubrics </justify> </rubric>\n\n<eval> detailed evaluation here, referencing each Chatbot's response using <quote_A>...</quote_A>, or <summary_A>...</summary_A>, and <quote_B>...</quote_B> or <summary_B>...</summary_B> as needed </eval>\n\n<answer>[[A/B]]</answer>"
-)
+# raw_text_evidence = (
+#     "Please act as an impartial judge and evaluate the quality of the responses provided by two AI Chatbots to the Client's question or conversation displayed below.\n"
+#     "Begin your evaluation by first generating the rubric items, and enclose them within <rubric> and </rubric> tags. " 
+#     "Inside the <rubric> section, also include <justify>...</justify> to explain why you chose those rubric criteria. "
+#     "Ensure your generated rubric is specific, clear, and tailored to compare the Chatbot responses in the context of the Client's question or conversation.\n"
+#     "Then, compare the following two conversations between the Client and the AI Chatbots, and provide your evaluation according to the rubric items. " 
+#     "Base your evaluation on the specific text of each Chatbot's response, and justify your evaluation by quoting or summarizing relevant parts of each response. " 
+#     "Whenever you quote Chatbot A verbatim, enclose that text in <quote_A>...</quote_A>. " 
+#     "Whenever you summarize or paraphrase Chatbot A, use <summary_A>...</summary_A>. " 
+#     "Likewise, for Chatbot B, use <quote_B>...</quote_B> or <summary_B>...</summary_B>.\n"
+#     "Enclose your complete evaluation explanation within <eval> and </eval> tags. Ensure that the order in which the responses are presented does not influence your decision, and do not let response length or Chatbot names affect your evaluation. Be as objective as possible.\n"
+#     "After providing your explanation, output your final verdict by strictly following this format: "
+#     "'<answer>[[A]]</answer>' if Chatbot A is better, or '<answer>[[B]]</answer>' if Chatbot B is better.\n"
+#     "i.e., <rubric> rubric items here <justify> justification for rubrics </justify> </rubric>\n\n<eval> detailed evaluation here, referencing each Chatbot's response using <quote_A>...</quote_A>, or <summary_A>...</summary_A>, and <quote_B>...</quote_B> or <summary_B>...</summary_B> as needed </eval>\n\n<answer>[[A/B]]</answer>"
+# )
 
 prompt_template_rl_detailed_evidence_single_justify_rubric = [
     {
@@ -238,8 +238,9 @@ prompt_template_rl_detailed_evidence_single_justify_rubric = [
     "Base your evaluation on the specific text of each Chatbot's response, and justify your evaluation by quoting or summarizing relevant parts of each response. " 
     "Whenever you quote Chatbot A verbatim, enclose that text in <quote_A>...</quote_A>. " 
     "Whenever you summarize or paraphrase Chatbot A, use <summary_A>...</summary_A>. " 
-    "Likewise, for Chatbot B, use <quote_B>...</quote_B> or <summary_B>...</summary_B>.\n"
-    "Enclose your complete evaluation explanation within <eval> and </eval> tags. Ensure that the order in which the responses are presented does not influence your decision, and do not let response length or Chatbot names affect your evaluation. Be as objective as possible.\n"
+    "Likewise, for Chatbot B, use <quote_B>...</quote_B> or <summary_B>...</summary_B>. "
+    "Enclose your complete evaluation explanation within <eval> and </eval> tags. " 
+    "Ensure that the order in which the responses are presented does not influence your decision, and do not let response length or Chatbot names affect your evaluation. Be as objective as possible.\n"
     "After providing your explanation, output your final verdict by strictly following this format: "
     "'<answer>[[A]]</answer>' if Chatbot A is better, or '<answer>[[B]]</answer>' if Chatbot B is better.\n"
     "i.e., <rubric> rubric items here <justify> justification for rubrics </justify> </rubric>\n\n<eval> detailed evaluation here, referencing each Chatbot's response using <quote_A>...</quote_A>, or <summary_A>...</summary_A>, and <quote_B>...</quote_B> or <summary_B>...</summary_B> as needed </eval>\n\n<answer>[[A/B]]</answer>"
