@@ -35,29 +35,6 @@ import re
 #     re.DOTALL
 # )
 
-# pattern = re.compile(
-#     r'^'
-#     # 1) <rubric> ... </rubric>, containing <justify> with non-empty text
-#     r'.*?<rubric>'
-#     r'(?=.*?<justify>\s*\S.*?\S\s*</justify>)'  # Lookahead ensures <justify> is non-empty
-#     r'(.*?)'
-#     r'</rubric>'
-    
-#     # 2) <eval> ... </eval>, must contain references to A and B with non-empty text
-#     r'.*?<eval>'
-#     # Chatbot A reference: either <quote_A>...</quote_A> or <summary_A>...</summary_A>, both non-empty
-#     r'(?=.*?(?:<quote_A>\s*\S.*?\S\s*</quote_A>|<summary_A>\s*\S.*?\S\s*</summary_A>))'
-#     # Chatbot B reference: either <quote_B>...</quote_B> or <summary_B>...</summary_B>, both non-empty
-#     r'(?=.*?(?:<quote_B>\s*\S.*?\S\s*</quote_B>|<summary_B>\s*\S.*?\S\s*</summary_B>))'
-#     r'(.*?)'
-#     r'</eval>'
-    
-#     # 3) <answer> ... </answer> with non-empty text
-#     r'.*?<answer>\s*(\S.*?\S|\S)\s*</answer>'
-#     r'.*$',
-#     re.DOTALL
-# )
-
 pattern = re.compile(
     r'^'
     # --- 1) <rubric> ... </rubric> ---
@@ -100,32 +77,41 @@ def validate_string_format(s: str) -> bool:
     return bool(pattern.match(s))
 
 
+def format_reward(s: str) -> float:
+    if validate_string_format(s):
+        return 1.0 
+    else:
+        return 0.0
+
+def answer_reward(solution_str: str, answer: str) ->float:
+    pred = solution_str.split(
+        '</eval>',
+    )[-1].strip() if '</eval>' in solution_str else 'error'
+
+    if answer == 'model_a':
+        if '[[A]]' in pred and '[[B]]' not in pred:
+            return 1.0
+        else:
+            return 0.0
+    elif answer == 'model_b':
+        if '[[B]]' in pred and '[[A]]' not in pred:
+            return 1.0
+        else:
+            return 0.0
+    else:
+        raise NotImplementedError('Check your dataset label!')
+
 def lm_as_judge_match(
     data_source,
     solution_str,
     ground_truth,
     extra_info,
 ):
-
-    if validate_string_format(solution_str):
-        pred = solution_str.split(
-        '</eval>',
-        )[-1].strip() if '</eval>' in solution_str else 'error'
-        answer = ground_truth
-        if answer == 'model_a':
-            if '[[A]]' in pred and '[[B]]' not in pred:
-                return 1.0
-            else:
-                return -1.0
-        elif answer == 'model_b':
-            if '[[B]]' in pred and '[[A]]' not in pred:
-                return 1.0
-            else:
-                return -1.0
-        else:
-            raise NotImplementedError('Check your dataset label!')
-    else:
-        return -1.0
+    r = 0.0 
+    r += format_reward(solution_str) 
+    r += answer_reward(solution_str=solution_str, answer=ground_truth)
+    
+    return r 
 
 
 
