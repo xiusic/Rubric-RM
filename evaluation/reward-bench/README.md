@@ -27,3 +27,11 @@ CUDA_VISIBLE_DEVICES=5 python scripts/run_generative.py --model Qwen/Qwen2.5-7B-
 
 CUDA_VISIBLE_DEVICES=5 python scripts/run_generative.py --model /shared/nas2/xiusic/gaotang/skylab-v02-math-18k-code-2_5k-baseline/ckpt/qwen-7b-sft-adjusted --model_save_name qwen-7b-sft --icl --vllm_gpu_util 0.85
 ```
+
+Guideline: 
+
+```
+CUDA_VISIBLE_DEVICES=6 python scripts/run_generative.py --model wzq016/qwen25-entrie-guideline-8k --model_save_name entire_guideline_76k --guideline
+
+CUDA_VISIBLE_DEVICES=7 python scripts/run_generative.py --model wzq016/qwen25-filtered-guideline-8k --model_save_name filtered_guideline_55k --guideline
+```

@@ -247,8 +247,6 @@ def main():
         model_modifier = "icl_openai"
     if args.guideline:
         model_modifier = "guideline"
-    if args.rubric_rl_new:
-        model_modifier = 'rubric_rl_new'
 
     ############################
     # Load dataset
@@ -371,6 +369,10 @@ def main():
                 def format_judgements(batch, optional_chat_template=None):
                     # TODO expand this to include fastchat chat templates if needed
                     mult_turn = True if len(batch["text_chosen"]) > 2 else False
+
+                    if mult_turn:
+                        print("Multi turn!")
+                        exit()
                     prompt = batch["text_chosen"][0]["content"]
                     answer_a = batch["text_chosen"]
                     answer_b = batch["text_rejected"]

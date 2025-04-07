@@ -666,7 +666,7 @@ def format_judge_answers(question, answer_a, answer_b, multi_turn=False, model_m
         )
         # print(system_prompt)
         # exit()
-        user_prompt = MTBENCH_RUBRIC["prompt_template"].format(
+        user_prompt = MTBENCH_Guideline["prompt_template"].format(
             question=question,
             answer_a=answer_a[1]["content"],
             answer_b=answer_b[1]["content"],
