@@ -4,37 +4,35 @@ export VERL_PPO_LOGGING_LEVEL="INFO"
 N_GPU=8
 
 # Model Setting
-MODEL_PATH=Qwen/Qwen2.5-14B-Instruct
+MODEL_PATH=Qwen/Qwen2.5-7B-Instruct
+
 
 # Training Setting
-LR=1.0e-6
-GPU_MEM_UTILIZATION=0.4 # Lower this if you met OOM problem
+LR=5.0e-6
+GPU_MEM_UTILIZATION=0.5 # Lower this if you met OOM problem
 TOTAL_EPISODES=1
 SAVE_EVERY_STEP=15
 TEST_EVERY_STEP=100000
-TRAIN_BS=1024           # Rollout batchsize. Could be arbitrary large, but must be divided by N_GPU.
-PPO_MINI_BS=128         # Train batch size. Could be arbitrary large, must be the divisor of TRAIN_BS and be divided by N_GPU. Setting this equal to TRAIN_BS means strictly on-policy.
+TRAIN_BS=2048           # Rollout batchsize. Could be arbitrary large, but must be divided by N_GPU.
+PPO_MINI_BS=256         # Train batch size. Could be arbitrary large, must be the divisor of TRAIN_BS and be divided by N_GPU. Setting this equal to TRAIN_BS means strictly on-policy.
 MAX_PROMPT_LENGTH=4096  # Lower this if you met OOM problem.
-MAX_RESPONSE_LENGTH=2048 # Lower this if you met OOM problem
-TRAIN_PER_GPU=1         # REAL train batch size per gpu. Lower this if you met OOM problem. Must be a divisor of PPO_MINI_BS.
-FORWARD_PER_GPU=1       # Batch size to get logprob. Lower this if you met OOM problem. Must be a divisor of TRAIN_BS.
+MAX_RESPONSE_LENGTH=4096 # Lower this if you met OOM problem
+TRAIN_PER_GPU=2         # REAL train batch size per gpu. Lower this if you met OOM problem. Must be a divisor of PPO_MINI_BS.
+FORWARD_PER_GPU=4       # Batch size to get logprob. Lower this if you met OOM problem. Must be a divisor of TRAIN_BS.
 
 # Logging Setting
 PROJECT_NAME=rubric_rm
-EXPERIMENT_NAME=rubric_rm_qwen2.5_14B_LR${LR}_sky_filtered_code_2_5k_math_18k_evidence_rubric_4k2k
-SAVE_NAME=qwen2.5_14B_LR${LR}_evidence_rubric_4k2k_separate_reward_function
+EXPERIMENT_NAME=rubric_rm_qwen2.5_7B_LR${LR}_sky_filtered_code_2_5k_math_18k_evidence_rubric_4k4k_separate_reward
+SAVE_NAME=qwen2.5_7B_LR${LR}_evidence_rubric_4k4k_separate_reward_function_largeBz
 SAVE_META_DIR=/shared/nas2/xiusic/gaotang/skylab-v02-math-18k-code-2_5k-baseline
 
 # Reward Setting
-REWARD_PATH=./rubric_rm/verl/utils/reward_score/lm_as_judge_evidence_rubric_separate_reward.py
+REWARD_PATH=./rubric_rm/verl/utils/reward_score/lm_as_judge_separate_reward.py
 REWARD_FUNC_NAME=lm_as_judge_match
 
 # Task
 TRAIN_TASK="gaotang/sky_v02_filtered_2_5kcode_18kmath_evidence_evaluation_justify_rubric"
 EVAL_TASK="gaotang/sky_v02_filtered_2_5kcode_18kmath_evidence_evaluation_justify_rubric"
-
-# FIXED SETTING (DO NOT MODIFY IF YOU DO NOT KNOW WHAT IT MEANS)
-MAX_NUM_BATCHED_TOKENS=$(($MAX_PROMPT_LENGTH + $MAX_RESPONSE_LENGTH))
 
 # Incase the node has ray engine started.
 ray stop
@@ -68,9 +66,10 @@ python3 -m rubric_rm.verl.trainer.main_ppo \
     trainer.n_gpus_per_node=${N_GPU} \
     trainer.default_local_dir=${SAVE_META_DIR}/${SAVE_NAME}
 
-
 ray stop
 
 sleep 5 
 
 CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python /shared/nas2/xiusic/train.py
+
+
