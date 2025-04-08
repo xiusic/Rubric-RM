@@ -36,10 +36,17 @@ git clone https://github.com/vllm-project/vllm.git
 cd vllm
 git checkout ed6e9075d31e32c8548b480a47d1ffb77da1f54c
 git cherry-pick caac5c2e597b1780c3df54a537c34e6061c32cff
+export VLLM_COMMIT=ed6e9075d31e32c8548b480a47d1ffb77da1f54c
+export VLLM_PRECOMPILED_WHEEL_LOCATION=https://wheels.vllm.ai/ed6e9075d31e32c8548b480a47d1ffb77da1f54c/vllm-1.0.0.dev-cp38-abi3-manylinux1_x86_64.whl
 VLLM_USE_PRECOMPILED=1 pip install --editable .
 ```
 
-Please install exactly like this, even if you install vllm before, or installed by verl, any other vllm version will fail.
+Please install exactly like this, even if you install vllm before, or installed by verl, any other vllm version will fail. In addition, install flash-attention as follows:
+
+```
+pip install flash-attn==2.7.2.post1 --no-build-isolation
+pip install torchdata
+```
 
 
 ## How to run training 

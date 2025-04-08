@@ -108,6 +108,9 @@ def get_args():
         "--rubric_rl", action="store_true", default=False, help="use rubric_rl chat template for rubric_rl models"
     )
     parser.add_argument(
+        '--rubric_evidence', action='store_true', default=False, help='use sft chat template for models that use a rubric'
+    )
+    parser.add_argument(
         "--rubric_rl_new", action="store_true", default=False, help="use rubric_rl chat template for rubric_rl models"
     )
     parser.add_argument(
@@ -233,6 +236,8 @@ def main():
         model_modifier = 'rubric'
     if args.rubric_rl_rubric:
         model_modifier = 'rubric_rl_rubric'
+    if args.rubric_evidence:
+        model_modifier = "rubric_evidence"
     if args.sft:
         model_modifier = 'sft'
     if args.rubric_rl_new:
@@ -495,6 +500,12 @@ def main():
                     elif args.rubric_rl_rubric:
                         with open(f"./output/answers{ds_string}_rubric_rl_rubric.json", "w") as file:
                             json.dump(answers, file)
+                    elif args.rubric_evidence:
+                        with open(f"./output/answers{ds_string}_rubric_evidence.json", "w") as file:
+                            json.dump(answers, file)
+                    elif args.sft_new:
+                        with open(f"./output/answers{ds_string}_sft_new.json", "w") as file:
+                            json.dump(answers, file, indent=4)
                     else:
                         with open(f"./output/answers{ds_string}.json", "w") as file:
                             json.dump(answers, file)

@@ -361,6 +361,32 @@ MTBENCH_RUBRIC_RL_RUBRIC = {
     "output_format": "[[A]]",
 }
 
+MTBENCH_RUBRIC_EVIDENCE = {
+    "name": 'rubric-rl',
+    'type': 'pairwise',
+    'system_prompt': 
+    "Please act as an impartial judge and evaluate the quality of the responses provided by two AI Chatbots to the Client's question or conversation displayed below.\n"
+    "Begin your evaluation by first generating the rubric items, and enclose them within <rubric> and </rubric> tags. " 
+    "Inside the <rubric> section, also include <justify>...</justify> to explain why you chose those rubric criteria. "
+    "Ensure your generated rubric is specific, clear, and tailored to compare the Chatbot responses in the context of the Client's question or conversation.\n"
+    "Then, compare the following two conversations between the Client and the AI Chatbots, and provide your evaluation according to the rubric items. " 
+    "Base your evaluation on the specific text of each Chatbot's response, and justify your evaluation by quoting or summarizing relevant parts of each response. " 
+    "Whenever you quote Chatbot A verbatim, enclose that text in <quote_A>...</quote_A>. " 
+    "Whenever you summarize or paraphrase Chatbot A, use <summary_A>...</summary_A>. " 
+    "Likewise, for Chatbot B, use <quote_B>...</quote_B> or <summary_B>...</summary_B>. "
+    "Enclose your complete evaluation explanation within <eval> and </eval> tags. " 
+    "Ensure that the order in which the responses are presented does not influence your decision, and do not let response length or Chatbot names affect your evaluation. Be as objective as possible.\n"
+    "After providing your explanation, output your final verdict by strictly following this format: "
+    "'<answer>[[A]]</answer>' if Chatbot A is better, or '<answer>[[B]]</answer>' if Chatbot B is better.\n"
+    "i.e., <rubric> rubric items here <justify> justification for rubrics </justify> </rubric>\n\n<eval> detailed evaluation here, referencing each Chatbot's response using <quote_A>...</quote_A>, or <summary_A>...</summary_A>, and <quote_B>...</quote_B> or <summary_B>...</summary_B> as needed </eval>\n\n<answer>[[A/B]]</answer>",
+    "prompt_template": 
+    "[Client Question]\n{question}\n\n[The Start of Chatbot A's Response]\n{answer_a}\n[The End of Chatbot A's Response]\n\n"
+    "[The Start of Chatbot B's Response]\n{answer_b}\n[The End of Chatbot B's Response]",
+    "description": "Prompt for general questions",
+    "category": "general",
+    "output_format": "[[A]]",
+}
+
 MTBENCH_MULTI_V2 = {
     "name": "pair-v2-multi-turn",
     "type": "pairwise",
@@ -581,6 +607,14 @@ def format_judge_answers(question, answer_a, answer_b, multi_turn=False, model_m
     elif model_modifier == "sft_new_user":
         system_prompt = MTBENCH_SFT_new_user['system_prompt']
         user_prompt = MTBENCH_SFT_new_user["prompt_template"].format(
+            question=question,
+            answer_a=answer_a[1]["content"],
+            answer_b=answer_b[1]["content"],
+            **kwargs,
+        )
+    elif model_modifier == "rubric_evidence":
+        system_prompt = MTBENCH_RUBRIC_EVIDENCE['system_prompt']
+        user_prompt = MTBENCH_RUBRIC_EVIDENCE["prompt_template"].format(
             question=question,
             answer_a=answer_a[1]["content"],
             answer_b=answer_b[1]["content"],
@@ -870,7 +904,7 @@ def process_judgement(judgment, model_modifier):
         # print(judgment)
         # exit()
         if '[[A]]' in judgment and '[[B]]' in judgment:
-            return "error"
+            return "strong_error"
         elif "[[A]]" in judgment:
             return "A"
         elif "[[B]]" in judgment:

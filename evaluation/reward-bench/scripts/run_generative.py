@@ -127,6 +127,9 @@ def get_args():
         '--guideline', action='store_true', default=False, help='use sft chat template for models that use a rubric'
     )
     parser.add_argument(
+        '--rubric_evidence', action='store_true', default=False, help='use sft chat template for models that use a rubric'
+    )
+    parser.add_argument(
         '--rubric_rl_rubric', action='store_true', default=False, help='use rubric_rl chat template for models that use a rubric'
     )
     parser.add_argument(
@@ -223,6 +226,8 @@ def main():
         model_modifier = 'rubric'
     if args.rubric_rl_rubric:
         model_modifier = 'rubric_rl_rubric'
+    if args.rubric_evidence:
+        model_modifier = "rubric_evidence"
     if args.sft:
         model_modifier = 'sft'
     if args.sft_new:
@@ -348,8 +353,12 @@ def main():
                     return 1
                 elif winner == loser_text:
                     return 0
+                elif winner == "strong_error":
+                    return 0 
+                elif winner == "error":
+                    return 0.5
                 else:  # if "error"
-                    return 0.5  # effectively a tie
+                    raise NotImplementedError("Problem with the winner text!")  # effectively a tie
             else:
                 return 0.5
 
@@ -560,6 +569,9 @@ def main():
                 json.dump(answers, file)
         elif args.rubric_rl_rubric:
             with open(f"./output/answers{ds_string}_rubric_rl_rubric.json", "w") as file:
+                json.dump(answers, file)
+        elif args.rubric_evidence:
+            with open(f"./output/answers{ds_string}_rubric_evidence.json", "w") as file:
                 json.dump(answers, file)
         else:
             with open(f"./output/answers{ds_string}.json", "w") as file:
