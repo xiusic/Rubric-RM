@@ -80,5 +80,5 @@ python3 -m rubric_rm.verl.trainer.main_ppo \
     trainer.default_local_dir=${SAVE_META_DIR}/${SAVE_NAME}
     
 
-# line 66 - last line are added 
+# line 68 - last line are added 
 ray stop
