@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=rl                                # Job name
-#SBATCH --nodes=2                                    # Number of nodes
+#SBATCH --nodes=4                                    # Number of nodes
 #SBATCH --ntasks-per-node=1                          # Number of tasks per node
 #SBATCH --cpus-per-task=128                          # Number of CPUs per task
 #SBATCH --gres=gpu:8                                 # Number of GPUs per node
@@ -16,7 +16,7 @@ export VLLM_USE_V1=0
 export VERL_PPO_LOGGING_LEVEL="INFO"
 export PYTHONUNBUFFERED=1
 N_GPU=8
-N_NODES=2
+N_NODES=4
 
 
 # ========SETTING RAY CLUSTER============
@@ -84,21 +84,22 @@ MODEL_PATH=/mnt/home/ziqi/hf_model/Qwen2.5-32B-Instruct
 LR=1.0e-6
 GPU_MEM_UTILIZATION=0.4 # Lower this if you met OOM problem
 TOTAL_EPISODES=1
-SAVE_EVERY_STEP=100
+SAVE_EVERY_STEP=15
 TEST_EVERY_STEP=100000
 TRAIN_BS=1024           # Rollout batchsize. Could be arbitrary large, but must be divided by N_GPU.
 PPO_MINI_BS=128         # Train batch size. Could be arbitrary large, must be the divisor of TRAIN_BS and be divided by N_GPU. Setting this equal to TRAIN_BS means strictly on-policy.
-MAX_PROMPT_LENGTH=3072  # Lower this if you met OOM problem.
-MAX_RESPONSE_LENGTH=2048 # Lower this if you met OOM problem
-TRAIN_PER_GPU=2         # REAL train batch size per gpu. Lower this if you met OOM problem. Must be a divisor of PPO_MINI_BS.
-FORWARD_PER_GPU=2       # Batch size to get logprob. Lower this if you met OOM problem. Must be a divisor of TRAIN_BS.
+
+MAX_PROMPT_LENGTH=4096  # Lower this if you met OOM problem.
+MAX_RESPONSE_LENGTH=4096 # Lower this if you met OOM problem
+TRAIN_PER_GPU=1         # REAL train batch size per gpu. Lower this if you met OOM problem. Must be a divisor of PPO_MINI_BS.
+FORWARD_PER_GPU=1       # Batch size to get logprob. Lower this if you met OOM problem. Must be a divisor of TRAIN_BS.
 
 # Logging Setting
 PROJECT_NAME=rubric_rm
-EXPERIMENT_NAME=rubric_rm_qwen2.5_32B_LR${LR}_sky_filtered_code_2_5k_math_18k_evidence_rubric_4k1k
+EXPERIMENT_NAME=rubric_rm_qwen2.5_32B_LR${LR}_sky_filtered_code_2_5k_math_18k_evidence_rubric_4k4k
 
 # Reward Setting
-REWARD_PATH=./rubric_rm/verl/utils/reward_score/lm_as_judge_evidence_rubric.py
+REWARD_PATH=./rubric_rm/verl/utils/reward_score/lm_as_judge_evidence_rubric_separate_reward.py
 REWARD_FUNC_NAME=lm_as_judge_match
 
 # Task
