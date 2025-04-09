@@ -3,7 +3,7 @@ from datasets import load_dataset, concatenate_datasets, Dataset
 from collections import Counter
 
 import argparse 
-
+from tqdm import tqdm 
 def parse_embedded_mpt_blocks(content: str, default_role: str = "assistant"):
     """
     Parse a single message 'content' string that may contain embedded
@@ -251,6 +251,35 @@ prompt_template_rl_detailed_evidence_single_justify_rubric = [
         'content': (
             "[Client Question]\n{question}\n\n[The Start of Chatbot A's Response]\n{answer_a}\n[The End of Chatbot A's Response]\n\n"
             "[The Start of Chatbot B's Response]\n{answer_b}\n[The End of Chatbot B's Response]"
+        )
+    }
+]
+
+prompt_template_rl_detailed_evidence_single_justify_rubric_Multi = [
+    {
+        'role': 'system',
+        'content': (
+    "Please act as an impartial judge and evaluate the quality of the responses provided by two AI Chatbots to the Client's question or conversation displayed below.\n"
+    "Begin your evaluation by first generating the rubric items, and enclose them within <rubric> and </rubric> tags. " 
+    "Inside the <rubric> section, also include <justify>...</justify> to explain why you chose those rubric criteria. "
+    "Ensure your generated rubric is specific, clear, and tailored to compare the Chatbot responses in the context of the Client's question or conversation.\n"
+    "Then, compare the following two conversations between the Client and the AI Chatbots, and provide your evaluation according to the rubric items. " 
+    "Base your evaluation on the specific text of each Chatbot's response, and justify your evaluation by quoting or summarizing relevant parts of each response. " 
+    "Whenever you quote Chatbot A verbatim, enclose that text in <quote_A>...</quote_A>. " 
+    "Whenever you summarize or paraphrase Chatbot A, use <summary_A>...</summary_A>. " 
+    "Likewise, for Chatbot B, use <quote_B>...</quote_B> or <summary_B>...</summary_B>. "
+    "Enclose your complete evaluation explanation within <eval> and </eval> tags. " 
+    "Ensure that the order in which the responses are presented does not influence your decision, and do not let response length or Chatbot names affect your evaluation. Be as objective as possible.\n"
+    "After providing your explanation, output your final verdict by strictly following this format: "
+    "'<answer>[[A]]</answer>' if Chatbot A is better, or '<answer>[[B]]</answer>' if Chatbot B is better.\n"
+    "i.e., <rubric> rubric items here <justify> justification for rubrics </justify> </rubric>\n\n<eval> detailed evaluation here, referencing each Chatbot's response using <quote_A>...</quote_A>, or <summary_A>...</summary_A>, and <quote_B>...</quote_B> or <summary_B>...</summary_B> as needed </eval>\n\n<answer>[[A/B]]</answer>"
+)
+    },
+    {
+        'role': 'user',
+        'content': (
+            "[The Start of the Conversation between Chatbot A and the Client]\n{conversation_1}\n[The End of the Conversation between Chatbot A and the Client]\n\n"
+            "[The Start of the Conversation between Chatbot B and the Client]\n{conversation_2}\n[The End of the Conversation between Chatbot B and the Client]"
         )
     }
 ]
@@ -753,12 +782,152 @@ def transform_sky_filtered_18k_math_2_5k_code_data_into_evidence_with_rubric_jus
     
     dataset.push_to_hub("gaotang/sky_v02_filtered_2_5kcode_18kmath_evidence_evaluation_justify_rubric")
         
+
+# def get_final_4k_data():
+#     ds = load_dataset("allenai/chatbot-area-preference-dissection")
+#     print(ds)
+
+def get_final_helpfulsteer_data():
+    global CURRENT_NUM
+    helpsteer = load_dataset("nvidia/HelpSteer2")
+
+    ds_train = helpsteer['train']
+    pair = []
+    curr = []
+    for i, item in enumerate(ds_train):
         
+        if i % 2 != 0 and i != 0:
+            curr.append(item)
+            pair.append(tuple(curr))
+            curr = []
+        else:
+            curr.append(item)
+
+    filtered_pair = []
+    for (item1, item2) in pair:
+        helpful_score = item1['helpfulness'] - item2['helpfulness']
+        correct_score = item1['correctness'] - item2['correctness'] 
+        coherence_score = item1['coherence'] - item2['coherence']
+        complexity_score = item1['complexity'] - item2['complexity'] 
+        verbosity_score = item1['verbosity'] - item2['verbosity']
+
+        if abs(helpful_score) > 0 and helpful_score * correct_score >= 0 and helpful_score * coherence_score >= 0:
+            filtered_pair.append((item1, item2))
+    
+    context_messages = []
+    winner = []
+
+    for (item1, item2) in filtered_pair:
+        question = item1['prompt'] 
+        assert item1['prompt'] == item2['prompt']
+        helpful_score = item1['helpfulness'] - item2['helpfulness'] 
+        if helpful_score > 0:
+            answer_chosen = item1['response']
+            answer_rej = item2['response']
+        else:
+            answer_chosen = item2['response']
+            answer_rej = item2['response']
+        
+        if CURRENT_NUM % 2 == 0:
+            answer_a = answer_chosen
+            answer_b = answer_rej
+            winner.append('model_a')
+        else:
+            answer_a = answer_rej
+            answer_b = answer_chosen
+            winner.append('model_b')
+
+        curr_prompt = copy.deepcopy(prompt_template_rl_detailed_evidence_single) 
+        curr_prompt[1]['content'] = curr_prompt[1]['content'].format(
+            question=question,
+            answer_a=answer_a,
+            answer_b=answer_b
+        )
+        context_messages.append(curr_prompt)
+        CURRENT_NUM += 1
+
+    dataset = Dataset.from_dict({
+        'context_messages': context_messages,
+        'winner': winner
+    })
+
+    dataset.push_to_hub("gaotang/final_filtered_helpfulsteer")
+    
+
+def get_tulu_preference():
+    global CURRENT_NUM
+    ds = load_dataset("allenai/olmo-2-0325-32b-preference-mix")
+
+    print(ds)
+    print(ds['train'][0])
+    context_messages = []
+    winner = []
+
+    num_single, num = 0, 0
+    for item in tqdm(ds['train']):
+        input_chosen = item['chosen']
+        input_rej = item['rejected']
+
+        num += 1
+        if (len(input_chosen) == 2 and input_chosen[0]['role'] == 'user' and input_chosen[1]['role'] == "assistant") \
+            and (len(input_rej) == 2 and input_rej[0]['role'] == 'user' and input_rej[1]['role'] == "assistant"):
+            single = True
+            num_single += 1  
+        else:
+            single = False 
+        
+        if single:
+            question_chosen, answer_chosen = convert_sky_data_single(item['chosen'])
+            question_rej, answer_rej = convert_sky_data_single(item['rejected'])
+            assert question_chosen == question_rej
+
+            if CURRENT_NUM % 2 == 0:
+                answer_a = answer_chosen
+                answer_b = answer_rej
+                winner.append('model_a')
+            else:
+                answer_a = answer_rej
+                answer_b = answer_chosen
+                winner.append('model_b') 
+            
+            curr_prompt = copy.deepcopy(prompt_template_rl_detailed_evidence_single_justify_rubric) 
+            curr_prompt[1]['content'] = curr_prompt[1]['content'].format(
+                question=question_chosen,
+                answer_a=answer_a,
+                answer_b=answer_b
+            )
+
+            context_messages.append(curr_prompt)
+            CURRENT_NUM += 1
+        else:
+            if CURRENT_NUM % 2 == 0:
+                conversation_1 = convert_sky_data_multi(item['chosen'], assistant_name="Chatbot A")
+                conversation_2 = convert_sky_data_multi(item['rejected'], assistant_name="Chatbot B")
+                winner.append('model_a')
+            else:
+                conversation_1 = convert_sky_data_multi(item['rejected'], assistant_name="Chatbot A")
+                conversation_2 = convert_sky_data_multi(item['chosen'], assistant_name="Chatbot B")
+                winner.append('model_b') 
+            
+            curr_prompt = copy.deepcopy(prompt_template_guideline_multi) 
+            curr_prompt[1]['content'] = curr_prompt[1]['content'].format(
+                conversation_1=conversation_1,
+                conversation_2=conversation_2,
+            )
+
+            context_messages.append(curr_prompt)
+            CURRENT_NUM += 1 
+    print(f"Num_single {num_single}, total num: {num}")
+    dataset = Dataset.from_dict({
+        'context_messages': context_messages,
+        'winner': winner
+    })
+    print(Counter(dataset["winner"]))
+    
+    dataset.push_to_hub("gaotang/Olmo2_preference_dataset")
 
 if __name__ == '__main__':
-    # transform_sky_filtered_18k_math_2_5k_code_data_into_evidence_with_rubric()
-    transform_sky_filtered_18k_math_2_5k_code_data_into_evidence_with_rubric_justification()
-    # new_dataset_sky()
-    # collect_orm_all()
-    # collect_no_imstart_orm_withcode()
+    # transform_sky_filtered_18k_math_2_5k_code_data_into_evidence_with_rubric_justification()
+    # get_final_helpfulsteer_data()
+    get_tulu_preference()
     
