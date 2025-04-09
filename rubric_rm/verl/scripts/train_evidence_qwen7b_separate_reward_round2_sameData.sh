@@ -35,7 +35,7 @@ EXPERIMENT_NAME=rubric_rm_qwen2.5_7B_LR${LR}_sky_filtered_code_2_5k_math_18k_evi
 
 
 # Model Setting
-MODEL_PATH=checkpoints/${PROJECT_NAME}/${EXPERIMENT_NAME}
+MODEL_PATH=checkpoints/${PROJECT_NAME}/rubric_rm_qwen2.5_7B_LR1.0e-6_sky_filtered_code_2_5k_math_18k_evidence_rubric_4k2k_separate_reward
 
 # Reward Setting
 REWARD_PATH=./rubric_rm/verl/utils/reward_score/lm_as_judge_evidence_rubric_separate_reward.py
