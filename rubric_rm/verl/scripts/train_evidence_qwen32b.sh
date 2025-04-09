@@ -88,10 +88,10 @@ SAVE_EVERY_STEP=100
 TEST_EVERY_STEP=100000
 TRAIN_BS=1024           # Rollout batchsize. Could be arbitrary large, but must be divided by N_GPU.
 PPO_MINI_BS=128         # Train batch size. Could be arbitrary large, must be the divisor of TRAIN_BS and be divided by N_GPU. Setting this equal to TRAIN_BS means strictly on-policy.
-MAX_PROMPT_LENGTH=4096  # Lower this if you met OOM problem.
-MAX_RESPONSE_LENGTH=1024 # Lower this if you met OOM problem
-TRAIN_PER_GPU=1         # REAL train batch size per gpu. Lower this if you met OOM problem. Must be a divisor of PPO_MINI_BS.
-FORWARD_PER_GPU=1       # Batch size to get logprob. Lower this if you met OOM problem. Must be a divisor of TRAIN_BS.
+MAX_PROMPT_LENGTH=3072  # Lower this if you met OOM problem.
+MAX_RESPONSE_LENGTH=2048 # Lower this if you met OOM problem
+TRAIN_PER_GPU=2         # REAL train batch size per gpu. Lower this if you met OOM problem. Must be a divisor of PPO_MINI_BS.
+FORWARD_PER_GPU=2       # Batch size to get logprob. Lower this if you met OOM problem. Must be a divisor of TRAIN_BS.
 
 # Logging Setting
 PROJECT_NAME=rubric_rm
