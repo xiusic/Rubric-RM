@@ -6,7 +6,7 @@
 #SBATCH --gres=gpu:8                                 # Number of GPUs per node
 #SBATCH --gpus-per-task=8                            # Number of GPUs per task
 #SBATCH --exclusive                                  # Use the entire node, all CPUs and memory
-#SBATCH --time=96:00:00                              # Maximum runtime
+#SBATCH --time=240:00:00                              # Maximum runtime
 #SBATCH --output=./logs/output_%j.log                # Standard output and error log
 
 set -x
