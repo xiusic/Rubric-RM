@@ -8,7 +8,7 @@ data_gen
 evaluation/JudgeLM 
 evaluation/notebook 
 RAG 
-
+META_EVALUATION
 # C extensions
 *.so
 

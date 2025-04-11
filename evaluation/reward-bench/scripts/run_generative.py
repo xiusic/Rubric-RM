@@ -138,6 +138,9 @@ def get_args():
     parser.add_argument(
         "--model_save_name", default="", type=str
     )
+    parser.add_argument(
+        "--meta_result_save_dir", default=None, type=str
+    )
     args = parser.parse_args()
     return args
 
@@ -457,9 +460,9 @@ def main():
                 guideline_document=guideline_document
             )
 
-            if np.random.rand() < 0.01:
-                print("system_prompt:", system_prompt)
-                print("user_prompt:", user_prompt)
+            # if np.random.rand() < 0.01:
+            #     print("system_prompt:", system_prompt)
+            #     print("user_prompt:", user_prompt)
 
             if optional_chat_template is not None:
                 optional_chat_template.set_system_message(system_prompt)
@@ -542,40 +545,40 @@ def main():
         # print(answers)
         winners = [process_judgement(a, model_modifier) for a in answers]
 
-        ds_string = '_pku_safe' if args.dataset == 'PKU-Alignment/PKU-SafeRLHF' else ''
-        if args.rubric_rl:
-            with open(f"./output/answers{ds_string}_rubric_rl_{args.model_save_name}.json", "w") as file:
-                json.dump(answers, file)
-        elif args.rubric_rl_new:
-            with open(f"./result/answers{ds_string}_rubric_rl_new_{args.model_save_name}.json", "w") as file:
-                json.dump(answers, file, indent=4)
-        elif args.sft_new:
-            with open(f"./result/answers{ds_string}_sft_new_{args.model_save_name}.json", "w") as file:
-                json.dump(answers, file, indent=4)
-        elif args.sft_new_user:
-            with open(f"./result/answers{ds_string}_sft_new_user_{args.model_save_name}.json", "w") as file:
-                json.dump(answers, file, indent=4)
-        elif args.icl:
-            with open(f"./result/answers{ds_string}_icl_{args.model_save_name}.json", "w") as file:
-                json.dump(answers, file, indent=4)
-        elif args.icl_openai:
-            with open(f"./result/answers{ds_string}_icl_openai_{args.model_save_name}.json", "w") as file:
-                json.dump(answers, file, indent=4)
-        elif args.guideline:
-            with open(f"./result/answers{ds_string}_guideline_{args.model_save_name}.json", "w") as file:
-                json.dump(answers, file, indent=4)
-        elif args.rubric:
-            with open(f"./output/answers{ds_string}_rubric.json", "w") as file:
-                json.dump(answers, file)
-        elif args.rubric_rl_rubric:
-            with open(f"./output/answers{ds_string}_rubric_rl_rubric.json", "w") as file:
-                json.dump(answers, file)
-        elif args.rubric_evidence:
-            with open(f"./output/answers{ds_string}_rubric_evidence.json", "w") as file:
-                json.dump(answers, file)
-        else:
-            with open(f"./output/answers{ds_string}.json", "w") as file:
-                json.dump(answers, file)
+        # ds_string = '_pku_safe' if args.dataset == 'PKU-Alignment/PKU-SafeRLHF' else ''
+        # if args.rubric_rl:
+        #     with open(f"./output/answers{ds_string}_rubric_rl_{args.model_save_name}.json", "w") as file:
+        #         json.dump(answers, file)
+        # elif args.rubric_rl_new:
+        #     with open(f"./result/answers{ds_string}_rubric_rl_new_{args.model_save_name}.json", "w") as file:
+        #         json.dump(answers, file, indent=4)
+        # elif args.sft_new:
+        #     with open(f"./result/answers{ds_string}_sft_new_{args.model_save_name}.json", "w") as file:
+        #         json.dump(answers, file, indent=4)
+        # elif args.sft_new_user:
+        #     with open(f"./result/answers{ds_string}_sft_new_user_{args.model_save_name}.json", "w") as file:
+        #         json.dump(answers, file, indent=4)
+        # elif args.icl:
+        #     with open(f"./result/answers{ds_string}_icl_{args.model_save_name}.json", "w") as file:
+        #         json.dump(answers, file, indent=4)
+        # elif args.icl_openai:
+        #     with open(f"./result/answers{ds_string}_icl_openai_{args.model_save_name}.json", "w") as file:
+        #         json.dump(answers, file, indent=4)
+        # elif args.guideline:
+        #     with open(f"./result/answers{ds_string}_guideline_{args.model_save_name}.json", "w") as file:
+        #         json.dump(answers, file, indent=4)
+        # elif args.rubric:
+        #     with open(f"./output/answers{ds_string}_rubric.json", "w") as file:
+        #         json.dump(answers, file)
+        # elif args.rubric_rl_rubric:
+        #     with open(f"./output/answers{ds_string}_rubric_rl_rubric.json", "w") as file:
+        #         json.dump(answers, file)
+        # elif args.rubric_evidence:
+        #     with open(f"./output/answers{ds_string}_rubric_evidence.json", "w") as file:
+        #         json.dump(answers, file)
+        # else:
+        #     with open(f"./output/answers{ds_string}.json", "w") as file:
+        #         json.dump(answers, file)
 
         def process_shuffled(win, shuffle):
             if shuffle:
@@ -589,17 +592,34 @@ def main():
                 return 1
             elif win == loser_text:
                 return 0
+            elif win == "strong_error":
+                return 0
+            elif win == "error":
+                return 0
             else:  # if "error"
-                return 0.5  # effectively a tie
+                # return 0.5  # effectively a tie
+                # print(win)
+                raise NotImplementedError("Check your Output!")
 
         results = [process_shuffled(w, s) for w, s in zip(winners, is_shuffled)]
+
+
+    if args.meta_result_save_dir is not None:
+        Meta_result_save_dir = Path(args.meta_result_save_dir) / args.model_save_name / "reward_bench"
+        Meta_result_save_dir.mkdir(exist_ok=True, parents=True)
+
 
     ############################
     # Print & process results
     ############################
     # add column for results for easy printing
     out_dataset = dataset.add_column("results", results)
-
+    
+    out_dataset = out_dataset.add_column("answers", answers) 
+    out_dataset = out_dataset.add_column("Is_Chosen_Answer_Shuffled_toPositionB", is_shuffled)
+    # print(out_dataset)
+    # print(out_dataset[0])
+    # exit()
     # add subsets back (removed so it's not handled by cuda)
     out_dataset = out_dataset.add_column("subset", subsets)
     out_dataset = out_dataset.add_column("id", ids)
@@ -626,6 +646,8 @@ def main():
 
     # print per subset and log into results_grouped file
     present_subsets = np.unique(subsets)
+
+    # RES_FINAL = {}
     for subset in present_subsets:
         subset_dataset = out_dataset.filter(lambda example: example["subset"] == subset)
         num_correct = sum(subset_dataset["results"])
@@ -638,35 +660,63 @@ def main():
         results_leaderboard = calculate_scores_per_section(EXAMPLE_COUNTS, SUBSET_MAPPING, results_grouped)
         print(results_leaderboard)
 
+    if args.meta_result_save_dir is not None:
+        # results_grouped["avg_each_section"] = np.mean(list(results_grouped.items()))
+        # results_grouped["strict_avg"] = total_c / total_n 
+        import copy 
+        result_saved = copy.deepcopy(results_leaderboard)
+        result_saved["avg_Result_each_section"] = np.mean(list(results_leaderboard.values()))
+        result_saved['absoluate_Result'] = sum(results) / len(results)
+        # scores_dict = out_dataset.to_dict()
+        # scores_dict["model"] = model_name
+        # scores_dict["model_type"] = model_type
+
+        data_as_list = []
+        for sample in out_dataset:
+            data_as_list.append(sample)
+        log_result_dir = Meta_result_save_dir / "log_result"
+        log_result_dir.mkdir(exist_ok=True, parents=True)
+        with open(log_result_dir / "logs.json", "w") as f:
+            json.dump(data_as_list, f, indent=2)
+        
+        pure_score_result_dir = Meta_result_save_dir / "score_result"
+        pure_score_result_dir.mkdir(exist_ok=True, parents=True) 
+        with open(pure_score_result_dir / "main_score.json", "w") as f:
+            json.dump(result_saved, f, indent=4)
+        with open(pure_score_result_dir / "each_small_section_score.json", "w") as f:
+            json.dump(results_grouped, f, indent=4)
+
+        
+
     ############################
     # Upload results to hub
     #############################
-    sub_path = "eval-set/" if not args.pref_sets else "pref-sets/"
-    results_url = save_to_hub(
-        results_grouped,
-        model_name,
-        sub_path,
-        args.debug,
-        local_only=args.do_not_save,
-        save_metrics_for_beaker=not args.disable_beaker_save,
-    )
-    if not args.do_not_save:
-        logger.info(f"Uploaded reward model results to {results_url}")
+    # sub_path = "eval-set/" if not args.pref_sets else "pref-sets/"
+    # results_url = save_to_hub(
+    #     results_grouped,
+    #     model_name,
+    #     sub_path,
+    #     args.debug,
+    #     local_only=args.do_not_save,
+    #     save_metrics_for_beaker=not args.disable_beaker_save,
+    # )
+    # if not args.do_not_save:
+    #     logger.info(f"Uploaded reward model results to {results_url}")
 
-    logger.info("Not uploading chosen-rejected text with scores due to model compatibility")
+    # logger.info("Not uploading chosen-rejected text with scores due to model compatibility")
 
     ############################
     # Save per-prompt results to hub
     ############################
     # create new json with scores and upload
-    scores_dict = out_dataset.to_dict()
-    scores_dict["model"] = model_name
-    scores_dict["model_type"] = model_type
+    # scores_dict = out_dataset.to_dict()
+    # scores_dict["model"] = model_name
+    # scores_dict["model_type"] = model_type
 
-    sub_path_scores = "eval-set-scores/" if not args.pref_sets else "pref-sets-scores/"
+    # sub_path_scores = "eval-set-scores/" if not args.pref_sets else "pref-sets-scores/"
 
-    scores_url = save_to_hub(scores_dict, model_name, sub_path_scores, args.debug, local_only=args.do_not_save)
-    logger.info(f"Uploading chosen-rejected text with scores to {scores_url}")
+    # scores_url = save_to_hub(scores_dict, model_name, sub_path_scores, args.debug, local_only=args.do_not_save)
+    # logger.info(f"Uploading chosen-rejected text with scores to {scores_url}")
 
 
 if __name__ == "__main__":

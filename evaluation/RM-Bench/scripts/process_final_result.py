@@ -3,11 +3,14 @@ import json
 import os 
 import numpy as np 
 from typing import List, Dict, Any
+from pathlib import Path 
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", type=str, required=True) 
 parser.add_argument("--model_save_name", type=str, required=True)
-
+parser.add_argument(
+    "--meta_result_save_dir", default=None, type=str
+)
 args = parser.parse_args()
 
 
@@ -174,3 +177,11 @@ print(final_res)
 
 with open(f"{output_dir}/final_result.json", "w") as f:
     json.dump(final_res, f, indent=4)
+
+
+if args.meta_result_save_dir is not None:
+    Meta_result_save_dir = Path(args.meta_result_save_dir) / args.model_save_name / "RM-Bench"
+    Meta_result_save_dir.mkdir(exist_ok=True, parents=True)
+
+    with open(Meta_result_save_dir / "final_score.json", 'w') as f:
+        json.dump(final_res, f, indent=4)

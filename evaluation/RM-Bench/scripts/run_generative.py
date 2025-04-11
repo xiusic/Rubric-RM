@@ -260,6 +260,7 @@ def main():
     raw_dataset_list = convert_robust_dataset_to_preference_dataset_list(args.datapath) 
     META_RESULTS_LIST = []
     META_OUTPUT_LIST = []
+    META_SHUFFLED = []
     score_chosen, score_rejected = [], []
 
     # print(raw_dataset_list)
@@ -529,6 +530,7 @@ def main():
                     # print("results: ",results)
                     META_RESULTS_LIST.append(results)
                     META_OUTPUT_LIST.append(answers)
+                    META_SHUFFLED.append(is_shuffled)
 
 
 
@@ -547,7 +549,8 @@ def main():
     import json
     # HACK: load the dataset from the file
     dataset_json:list = json.load(open(args.datapath))
-    
+    if args.debug:
+        dataset_json = dataset_json[:10]
     
     for idx, unit in enumerate(dataset_json):
         # unit['score_orig'] = score_original[idx]
@@ -556,6 +559,9 @@ def main():
         ]
         unit['output'] = [
             output_list[idx] for output_list in META_OUTPUT_LIST
+        ]
+        unit['Is_Chosen_Answer_Shuffled_toPositionB'] = [
+            shuffle_list[idx] for shuffle_list in META_SHUFFLED
         ]
 
         # unit['score_chosen'] = [
@@ -677,6 +683,8 @@ def main():
         def format_judgements(batch, optional_chat_template=None):
             # TODO expand this to include fastchat chat templates if needed
             mult_turn = True if len(batch["text_chosen"]) > 2 else False
+            if mult_turn:
+                raise NotImplementedError("Check multi turn")
             prompt = batch["text_chosen"][0]["content"]
             answer_a = batch["text_chosen"]
             answer_b = batch["text_rejected"]
