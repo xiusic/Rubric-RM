@@ -78,7 +78,7 @@ done
 
 # ============SETTING PARAMETER===============
 # Model Setting
-MODEL_PATH=/mnt/home/ziqi/hf_model/Qwen2.5-32B-Instruct
+MODEL_PATH=Qwen/QwQ-32B
 
 # Training Setting
 LR=1.0e-6
@@ -96,7 +96,7 @@ FORWARD_PER_GPU=1       # Batch size to get logprob. Lower this if you met OOM p
 
 # Logging Setting
 PROJECT_NAME=rubric_rm
-EXPERIMENT_NAME=rubric_rm_qwen2.5_32B_LR${LR}_filtered_sky_code_8k_math_10k_rubric_evidence_classify_4k4k
+EXPERIMENT_NAME=rubric_rm_Qwq32b_LR${LR}_filtered_sky_code_8k_math_10k_rubric_evidence_classify_4k4k
 
 # Reward Setting
 REWARD_PATH=./rubric_rm/verl/utils/reward_score/lm_as_judge_evidence_rubric_classify_separate_reward.py
