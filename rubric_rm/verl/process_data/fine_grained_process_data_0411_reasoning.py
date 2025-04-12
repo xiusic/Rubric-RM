@@ -648,8 +648,34 @@ def convert_ds_to_sft():
 # def get_train_val_split():
     # ds = load_dataset("gaotang/filtered_sky_code_8k_math_10k_rubric_evidence_classify")['train']
 
+def convert_ds_to_reasoning():
+    ds = load_dataset("gaotang/filtered_sky_code_8k_math_10k_rubric_evidence_classify")['train']
+
+    context_messages = []
+    winner = []
+
+    for item in ds:
+        context_message = copy.deepcopy(item['context_messages'])
+        winner.append(item['winner'])
+        assert context_message[0]['role'] == 'system' and context_message[1]['role'] == 'user' 
+        user_content = context_message[1]['content']
+        context_messages.append([ 
+            {
+                'user': "Please act as an impartial judge and evaluate the quality of the responses provided by two AI Chatbots "
+            "to the Client question displayed below. \n\n" + user_content + "\n\n"
+            "Output your final verdict at last by strictly following this format: "
+            "'<answer>[[A]]</answer>' if Chatbot A is better, or '<answer>[[B]]</answer>' if Chatbot B is better."
+            }
+        ])
+    dataset = Dataset.from_dict({
+        'context_messages': context_messages,
+        'winner': winner
+    })
+    dataset.push_to_hub("gaotang/filtered_sky_code_8k_math_10k_rubric_reasoning")
+
 
 
 if __name__ == '__main__':
     # collect_evidence_classify_dataset()    
-    convert_ds_to_sft()
+    # convert_ds_to_sft()
+    convert_ds_to_reasoning()

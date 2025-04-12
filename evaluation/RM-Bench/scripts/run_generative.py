@@ -649,8 +649,12 @@ def main():
                     return 1
                 elif winner == loser_text:
                     return 0
+                elif winner == "error":
+                    return 0 
+                elif winner == "strong_error":
+                    return 0
                 else:  # if "error"
-                    return 0.5  # effectively a tie
+                    raise NotImplementedError("Chekck your winner!")  # effectively a tie
             else:
                 return 0.5
 
@@ -825,8 +829,12 @@ def main():
                 return 1
             elif win == loser_text:
                 return 0
+            elif win == "error":
+                return 0 
+            elif win == "strong_error":
+                return 0
             else:  # if "error"
-                return 0.5  # effectively a tie
+                raise NotImplementedError("Chekck your win!") 
 
         results = [process_shuffled(w, s) for w, s in zip(winners, is_shuffled)]
 

@@ -259,18 +259,18 @@ MTBENCH_SFT = {
 MTBENCH_SFT_new = {
     "name": 'SFT-new',
     'type': 'pairwise',
-    'system_prompt': "Please act as an impartial judge and evaluate the quality of the responses provided by two AI chatbots. "
-            "You should choose the chatbot that follows the client's instructions and answers the client's question better. "
-            "Do not allow the length of the responses to influence your evaluation. Do not favor certain names "
-            "of the chatbots. Be as objective as possible. Output your final verdict directly by strictly following this format: "
-            '"A" if Chatbot A is better, "B" if Chatbot B is better.',
+    'system_prompt': "Please act as an impartial judge and evaluate the quality of the responses provided by two AI Chatbots to the Client's question displayed below.\n"
+        "You should choose the chatbot that follows the client's instructions and answers the client's question better. " 
+        "Do not allow the length of the responses to influence your evaluation. Do not favor certain names of the chatbots. Be as objective as possible. " 
+        "Output your final verdict directly by strictly following this format: \"A\" if Chatbot A is better, \"B\" if Chatbot B is better.",
     "prompt_template": 
-     "[Client Question]\n{question}\n\n[The Start of Chatbot A's Answer]\n{answer_a}\n[The End of Chatbot A's Answer]\n\n"
-     "[The Start of Chatbot B's Answer]\n{answer_b}\n[The End of Chatbot B's Answer]",
+     "[Client Question]\n{question}\n\n[The Start of Chatbot A's Response]\n{answer_a}\n[The End of Chatbot A's Response]\n\n"
+     "[The Start of Chatbot B's Response]\n{answer_b}\n[The End of Chatbot B's Response]",
     "description": "Prompt for general questions",
     "category": "general",
     "output_format": "A",
 }
+
 
 MTBENCH_SFT_new_user = {
     "name": 'SFT-new',
@@ -899,7 +899,7 @@ def process_judgement(judgment, model_modifier):
         elif judgment == "B":
             return "B"
         else:
-            return "error"
+            return "strong_error"
     else:
         # print(judgment)
         # exit()
