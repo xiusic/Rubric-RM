@@ -17,7 +17,7 @@ export VERL_PPO_LOGGING_LEVEL="INFO"
 N_GPU=8
 
 # Model Setting
-MODEL_PATH=deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
+MODEL_PATH=/mnt/home/ziqi/hf_model/DeepSeek-R1-Distill-Qwen-7B
 
 # Training Setting
 LR=1.0e-6

@@ -78,7 +78,7 @@ done
 
 # ============SETTING PARAMETER===============
 # Model Setting
-MODEL_PATH=Qwen/QwQ-32B
+MODEL_PATH=/mnt/home/ziqi/hf_model/QwQ-32B
 
 # Training Setting
 LR=1.0e-6

@@ -78,7 +78,7 @@ done
 
 # ============SETTING PARAMETER===============
 # Model Setting
-MODEL_PATH=deepseek-ai/DeepSeek-R1-Distill-Qwen-14B
+MODEL_PATH=/mnt/home/ziqi/hf_model/DeepSeek-R1-Distill-Qwen-14B
 
 # Training Setting
 LR=1.0e-6
