@@ -73,7 +73,7 @@ python3 -m rubric_rm.verl.trainer.main_ppo \
     trainer.project_name=${PROJECT_NAME} \
     trainer.total_epochs=${TOTAL_EPISODES} \
     trainer.save_freq=${SAVE_EVERY_STEP} \
-    trainer.test_freq=${TEST_EVERY_STEP} \
+    trainer.test_freq=-1 \
     trainer.experiment_name=${EXPERIMENT_NAME} \
     trainer.n_gpus_per_node=${N_GPU} \
     actor_rollout_ref.actor.entropy_coeff=0
