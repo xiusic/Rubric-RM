@@ -99,7 +99,7 @@ PROJECT_NAME=rubric_rm
 EXPERIMENT_NAME=rubric_rm_deepseek_r1_distilled_14B_LR${LR}_filtered_sky_code_8k_math_10k_rubric_reasoning_4k4k
 
 # Reward Setting
-REWARD_PATH=./rubric_rm/verl/utils/reward_score/lm_as_judge_evidence_rubric_classify_separate_reward.py
+REWARD_PATH=./rubric_rm/verl/utils/reward_score/lm_as_judge_evidence_rubric_reasoning.py
 REWARD_FUNC_NAME=lm_as_judge_match
 
 # Task
