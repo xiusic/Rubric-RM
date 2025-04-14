@@ -99,7 +99,7 @@ PROJECT_NAME=rubric_rm
 EXPERIMENT_NAME=rubric_rm_Qwq32b_LR${LR}_filtered_sky_code_8k_math_10k_rubric_reasoning_4k4k
 
 # Reward Setting
-REWARD_PATH=./rubric_rm/verl/utils/reward_score/lm_as_judge_evidence_rubric_classify_separate_reward.py
+REWARD_PATH=./rubric_rm/verl/utils/reward_score/lm_as_judge_evidence_rubric_reasoning.py
 REWARD_FUNC_NAME=lm_as_judge_match
 
 # Task
@@ -129,7 +129,7 @@ python3 -m rubric_rm.verl.trainer.main_ppo \
     trainer.project_name=${PROJECT_NAME} \
     trainer.total_epochs=${TOTAL_EPISODES} \
     trainer.save_freq=${SAVE_EVERY_STEP} \
-    trainer.test_freq=${TEST_EVERY_STEP} \
+    trainer.test_freq=-1 \
     trainer.experiment_name=${EXPERIMENT_NAME} \
     trainer.n_gpus_per_node=${N_GPU} \
     trainer.nnodes=${N_NODES} \
