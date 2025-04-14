@@ -78,7 +78,7 @@ done
 
 # ============SETTING PARAMETER===============
 # Model Setting
-MODEL_PATH=deepseek-ai/DeepSeek-R1-Distill-Qwen-14B
+MODEL_PATH=/mnt/home/ziqi/hf_model/DeepSeek-R1-Distill-Qwen-14B
 
 # Training Setting
 LR=1.0e-6
@@ -104,7 +104,7 @@ REWARD_FUNC_NAME=lm_as_judge_match
 
 # Task
 TRAIN_TASK="gaotang/filtered_sky_code_8k_math_10k_rubric_reasoning"
-EVAL_TASK="gaotang/gaotang/filtered_sky_code_8k_math_10k_rubric_reasoning"
+EVAL_TASK="gaotang/filtered_sky_code_8k_math_10k_rubric_reasoning"
 
 # FIXED SETTING (DO NOT MODIFY IF YOU DO NOT KNOW WHAT IT MEANS)
 MAX_NUM_BATCHED_TOKENS=$(($MAX_PROMPT_LENGTH + $MAX_RESPONSE_LENGTH))

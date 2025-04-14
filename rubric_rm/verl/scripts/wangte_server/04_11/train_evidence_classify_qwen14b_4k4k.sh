@@ -133,4 +133,4 @@ python3 -m rubric_rm.verl.trainer.main_ppo \
     trainer.experiment_name=${EXPERIMENT_NAME} \
     trainer.n_gpus_per_node=${N_GPU} \
     trainer.nnodes=${N_NODES} \
-    trainer.entropy_coeff=0
+    actor_rollout_ref.actor.entropy_coeff=0
