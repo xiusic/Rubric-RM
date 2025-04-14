@@ -130,6 +130,9 @@ def get_args():
         '--rubric_evidence', action='store_true', default=False, help='use sft chat template for models that use a rubric'
     )
     parser.add_argument(
+        '--rubric_evidence_classify', action='store_true', default=False, help='use rubric_rl chat template for models that use a rubric'
+    )
+    parser.add_argument(
         '--rubric_rl_rubric', action='store_true', default=False, help='use rubric_rl chat template for models that use a rubric'
     )
     parser.add_argument(
@@ -229,6 +232,8 @@ def main():
         model_modifier = 'rubric'
     if args.rubric_rl_rubric:
         model_modifier = 'rubric_rl_rubric'
+    if args.rubric_evidence_classify:
+        model_modifier = 'rubric_evidence_classify'
     if args.rubric_evidence:
         model_modifier = "rubric_evidence"
     if args.sft:

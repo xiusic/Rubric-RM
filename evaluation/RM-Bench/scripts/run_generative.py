@@ -138,6 +138,9 @@ def get_args():
         '--rubric_rl_rubric', action='store_true', default=False, help='use rubric_rl chat template for models that use a rubric'
     )
     parser.add_argument(
+        '--rubric_evidence_classify', action='store_true', default=False, help='use rubric_rl chat template for models that use a rubric'
+    )
+    parser.add_argument(
         '--stop_llamma3', action='store_true', default=False, help='use rubric_rl chat template for models that use a rubric'
     )
     parser.add_argument(
@@ -236,6 +239,8 @@ def main():
         model_modifier = 'rubric'
     if args.rubric_rl_rubric:
         model_modifier = 'rubric_rl_rubric'
+    if args.rubric_evidence_classify:
+        model_modifier = 'rubric_evidence_classify'
     if args.rubric_evidence:
         model_modifier = "rubric_evidence"
     if args.sft:
@@ -500,6 +505,9 @@ def main():
                             json.dump(answers, file)
                     elif args.rubric_rl_rubric:
                         with open(f"./output/answers{ds_string}_rubric_rl_rubric.json", "w") as file:
+                            json.dump(answers, file)
+                    elif args.rubric_evidence_classify:
+                        with open(f"./output/answers{ds_string}_rubric_evidence_classify.json", "w") as file:
                             json.dump(answers, file)
                     elif args.rubric_evidence:
                         with open(f"./output/answers{ds_string}_rubric_evidence.json", "w") as file:
@@ -797,6 +805,9 @@ def main():
                 json.dump(answers, file)
         elif args.rubric_rl_rubric:
             with open(f"./output/answers{ds_string}_rubric_rl_rubric.json", "w") as file:
+                json.dump(answers, file)
+        elif args.rubric_evidence_classify:
+            with open(f"./output/answers{ds_string}_rubric_evidence_classify.json", "w") as file:
                 json.dump(answers, file)
         elif args.sft_new:
             with open(f"./result/answers{ds_string}_sft_new_{args.model_save_name}.json", "w") as file:

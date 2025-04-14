@@ -80,13 +80,13 @@ def format_reward(s: str) -> float:
         return 0.0
 
 def answer_reward(solution_str: str, answer: str) ->float:
-    pred = solution_str[-40:]
+    pred = solution_str[-80:]
 
     if answer == 'model_a':
         if '<answer>[[A]]</answer>' in pred and '<answer>[[B]]</answer>' not in pred:
             return 1.0
         else:
-            return -1,0
+            return -1.0
     elif answer == 'model_b':
         if '<answer>[[B]]</answer>' in pred and '<answer>[[A]]</answer>' not in pred:
             return 1.0
