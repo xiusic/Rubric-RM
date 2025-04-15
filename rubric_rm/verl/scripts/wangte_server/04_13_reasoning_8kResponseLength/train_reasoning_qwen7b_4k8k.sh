@@ -1,38 +1,48 @@
+#!/bin/bash
+#SBATCH --job-name=rl                                # Job name
+#SBATCH --nodes=1                                    # Number of nodes
+#SBATCH --ntasks-per-node=1                          # Number of tasks per node
+#SBATCH --cpus-per-task=128                          # Number of CPUs per task
+#SBATCH --gres=gpu:8                                 # Number of GPUs per node
+#SBATCH --gpus-per-task=8                            # Number of GPUs per task
+#SBATCH --exclusive                                  # Use the entire node, all CPUs and memory
+#SBATCH --time=72:00:00                              # Maximum runtime
+#SBATCH --output=./logs/output_%j.log                # Standard output and error log
+
+set -x
+
 export VLLM_ATTENTION_BACKEND=XFORMERS
 export VLLM_USE_V1=0
-export VERL_PPO_LOGGING_LEVEL="DEBUG"
+export VERL_PPO_LOGGING_LEVEL="INFO"
 N_GPU=8
 
 # Model Setting
-MODEL_PATH=Qwen/Qwen2.5-7B-Instruct
+MODEL_PATH=/mnt/home/ziqi/hf_model/DeepSeek-R1-Distill-Qwen-7B
 
 # Training Setting
 LR=1.0e-6
 GPU_MEM_UTILIZATION=0.5 # Lower this if you met OOM problem
 TOTAL_EPISODES=1
-SAVE_EVERY_STEP=15
+SAVE_EVERY_STEP=100
 TEST_EVERY_STEP=100000
 TRAIN_BS=1024           # Rollout batchsize. Could be arbitrary large, but must be divided by N_GPU.
 PPO_MINI_BS=128         # Train batch size. Could be arbitrary large, must be the divisor of TRAIN_BS and be divided by N_GPU. Setting this equal to TRAIN_BS means strictly on-policy.
 MAX_PROMPT_LENGTH=4096  # Lower this if you met OOM problem.
-MAX_RESPONSE_LENGTH=4096 # Lower this if you met OOM problem
+MAX_RESPONSE_LENGTH=8192 # Lower this if you met OOM problem
 TRAIN_PER_GPU=4         # REAL train batch size per gpu. Lower this if you met OOM problem. Must be a divisor of PPO_MINI_BS.
 FORWARD_PER_GPU=4       # Batch size to get logprob. Lower this if you met OOM problem. Must be a divisor of TRAIN_BS.
 
 # Logging Setting
 PROJECT_NAME=rubric_rm
-EXPERIMENT_NAME=rubric_rm_qwen2.5_7B_LR${LR}_filtered_sky_code_8k_math_10k_rubric_evidence_classify_4k4k_noKL_Debug
-
-SAVE_META_DIR=/shared/nas2/xiusic/gaotang/skylab-v02-code-8k-math-10k/
-SAVE_NAME=qwen2.5_7B_LR${LR}_filtered_sky_code_8k_math_10k_rubric_evidence_classify_4k4k_noKL
+EXPERIMENT_NAME=rubric_rm_deepseek_r1_distilled_7B_LR${LR}_filtered_sky_code_8k_math_10k_rubric_reasoning_4k8k
 
 # Reward Setting
-REWARD_PATH=./rubric_rm/verl/utils/reward_score/lm_as_judge_evidence_rubric_classify_separate_reward.py
+REWARD_PATH=./rubric_rm/verl/utils/reward_score/lm_as_judge_evidence_rubric_reasoning.py
 REWARD_FUNC_NAME=lm_as_judge_match
 
 # Task
-TRAIN_TASK="gaotang/filtered_sky_code_8k_math_10k_rubric_evidence_classify"
-EVAL_TASK="gaotang/filtered_sky_code_8k_math_10k_rubric_evidence_classify"
+TRAIN_TASK="gaotang/filtered_sky_code_8k_math_10k_rubric_reasoning"
+EVAL_TASK="gaotang/filtered_sky_code_8k_math_10k_rubric_reasoning"
 
 # FIXED SETTING (DO NOT MODIFY IF YOU DO NOT KNOW WHAT IT MEANS)
 MAX_NUM_BATCHED_TOKENS=$(($MAX_PROMPT_LENGTH + $MAX_RESPONSE_LENGTH))
@@ -42,7 +52,6 @@ ray stop
 sleep 5
 ray stop
 
-export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 ray start --head --node-ip-address 0.0.0.0 --num-gpus ${N_GPU}
 
 python3 -m rubric_rm.verl.trainer.main_ppo \
@@ -67,13 +76,6 @@ python3 -m rubric_rm.verl.trainer.main_ppo \
     trainer.test_freq=-1 \
     trainer.experiment_name=${EXPERIMENT_NAME} \
     trainer.n_gpus_per_node=${N_GPU} \
-    actor_rollout_ref.actor.entropy_coeff=0 \
-    actor_rollout_ref.actor.use_kl_loss=false \
-    actor_rollout_ref.actor.kl_loss_coef=0 \
-    trainer.default_local_dir=${SAVE_META_DIR}/${SAVE_NAME}
+    actor_rollout_ref.actor.entropy_coeff=0
 
 ray stop
-
-sleep 5 
-
-CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python /shared/nas2/xiusic/train.py
