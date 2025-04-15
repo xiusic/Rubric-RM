@@ -81,7 +81,7 @@ done
 MODEL_PATH=/mnt/home/ziqi/hf_model/QwQ-32B
 
 # Training Setting
-LR=1.0e-6
+LR=1.0e-7
 GPU_MEM_UTILIZATION=0.4 # Lower this if you met OOM problem
 TOTAL_EPISODES=1
 SAVE_EVERY_STEP=15
