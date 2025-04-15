@@ -134,3 +134,8 @@ python3 -m rubric_rm.verl.trainer.main_ppo \
     trainer.n_gpus_per_node=${N_GPU} \
     trainer.nnodes=${N_NODES} \
     actor_rollout_ref.actor.entropy_coeff=0
+
+A=$(ls checkpoints/${PROJECT_NAME}/${EXPERIMENT_NAME}/global_step_* | sort -t_ -k3 -n | tail -n1 | sed 's/:$//')
+python rubric_rm/verl/scripts/converter.py \
+    --local_dir "$A/actor" \
+    --hf_upload_path "wzq016/${EXPERIMENT_NAME}"
