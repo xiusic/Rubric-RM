@@ -133,6 +133,18 @@ def get_args():
         '--rubric_evidence_classify', action='store_true', default=False, help='use rubric_rl chat template for models that use a rubric'
     )
     parser.add_argument(
+        '--rubric_evidence_classify_weight', action='store_true', default=False, help='use rubric_rl chat template for models that use a rubric'
+    )
+    parser.add_argument(
+        '--rubric_evidence_classify_guideline', action='store_true', default=False, help='use rubric_rl chat template for models that use a rubric'
+    )
+    parser.add_argument(
+        '--reasoning', action='store_true', default=False, help='use rubric_rl chat template for models that use a rubric'
+    )
+    parser.add_argument(
+        '--max_tokens', type=int, default=2048, help='max tokens for generation'
+    )
+    parser.add_argument(
         '--rubric_rl_rubric', action='store_true', default=False, help='use rubric_rl chat template for models that use a rubric'
     )
     parser.add_argument(
@@ -234,6 +246,12 @@ def main():
         model_modifier = 'rubric_rl_rubric'
     if args.rubric_evidence_classify:
         model_modifier = 'rubric_evidence_classify'
+    if args.rubric_evidence_classify_weight:
+        model_modifier = 'rubric_evidence_classify_weight'
+    if args.rubric_evidence_classify_guideline:
+        model_modifier = 'rubric_evidence_classify_guideline'
+    if args.reasoning:
+        model_modifier = 'reasoning'
     if args.rubric_evidence:
         model_modifier = "rubric_evidence"
     if args.sft:
@@ -470,19 +488,25 @@ def main():
             #     print("user_prompt:", user_prompt)
 
             if optional_chat_template is not None:
+                raise NotImplementedError("Chat templates not implemented yet")
                 optional_chat_template.set_system_message(system_prompt)
                 optional_chat_template.messages = []
                 optional_chat_template.append_message(optional_chat_template.roles[0], user_prompt)
                 optional_chat_template.append_message(optional_chat_template.roles[1], None)
                 prompt = optional_chat_template.get_prompt()
             else:
-                messages = [
-                    {
-                        "role": "system",
-                        "content": system_prompt,
-                    },
-                    {"role": "user", "content": user_prompt},
-                ]
+                if args.reasoning:
+                    messages = [
+                        {'role': "user", 'content':user_prompt},
+                    ]
+                else:
+                    messages = [
+                        {
+                            "role": "system",
+                            "content": system_prompt,
+                        },
+                        {"role": "user", "content": user_prompt},
+                    ]
                 prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
                 # chat template already include special tokens
                 # when vllm runs model.generate on prompts, the tokenizer is applied to the prompts
@@ -533,7 +557,7 @@ def main():
                 n=1,
                 temperature=0,
                 top_p=1,
-                max_tokens=2048,
+                max_tokens=args.max_tokens,
                 stop_token_ids=stop_token_ids,
             )
             outputs = model.generate(prompts, sampling_params=sampling_params)
@@ -548,8 +572,12 @@ def main():
         else:
             answers = [o.outputs[0].text for o in outputs]
         # print(answers)
-        winners = [process_judgement(a, model_modifier) for a in answers]
 
+        # print("Model modifier: ", model_modifier)
+        # print("#"* 100)
+        winners = [process_judgement(a, model_modifier) for a in answers]
+        # print("winners: ", winners)
+        # exit()
         # ds_string = '_pku_safe' if args.dataset == 'PKU-Alignment/PKU-SafeRLHF' else ''
         # if args.rubric_rl:
         #     with open(f"./output/answers{ds_string}_rubric_rl_{args.model_save_name}.json", "w") as file:

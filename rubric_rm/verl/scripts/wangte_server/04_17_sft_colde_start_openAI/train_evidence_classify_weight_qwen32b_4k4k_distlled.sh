@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=rl                                # Job name
-#SBATCH --nodes=2                                    # Number of nodes
+#SBATCH --nodes=4                                    # Number of nodes
 #SBATCH --ntasks-per-node=1                          # Number of tasks per node
 #SBATCH --cpus-per-task=128                          # Number of CPUs per task
 #SBATCH --gres=gpu:8                                 # Number of GPUs per node
@@ -16,7 +16,7 @@ export VLLM_USE_V1=0
 export VERL_PPO_LOGGING_LEVEL="INFO"
 export PYTHONUNBUFFERED=1
 N_GPU=8
-N_NODES=2
+N_NODES=4
 
 
 # ========SETTING RAY CLUSTER============
@@ -78,33 +78,33 @@ done
 
 # ============SETTING PARAMETER===============
 # Model Setting
-MODEL_PATH=/mnt/home/ziqi/hf_model/DeepSeek-R1-Distill-Qwen-14B
+MODEL_PATH=gaotang/qwen_32b_sky_filtered_code8k_math_10k_distilled_OpenAI
 
 # Training Setting
-LR=1.0e-6
+LR=5.0e-7
 GPU_MEM_UTILIZATION=0.4 # Lower this if you met OOM problem
 TOTAL_EPISODES=1
-SAVE_EVERY_STEP=15
+SAVE_EVERY_STEP=45
 TEST_EVERY_STEP=100000
 TRAIN_BS=1024           # Rollout batchsize. Could be arbitrary large, but must be divided by N_GPU.
 PPO_MINI_BS=128         # Train batch size. Could be arbitrary large, must be the divisor of TRAIN_BS and be divided by N_GPU. Setting this equal to TRAIN_BS means strictly on-policy.
 
 MAX_PROMPT_LENGTH=4096  # Lower this if you met OOM problem.
-MAX_RESPONSE_LENGTH=8192 # Lower this if you met OOM problem
+MAX_RESPONSE_LENGTH=4096 # Lower this if you met OOM problem
 TRAIN_PER_GPU=1         # REAL train batch size per gpu. Lower this if you met OOM problem. Must be a divisor of PPO_MINI_BS.
 FORWARD_PER_GPU=1       # Batch size to get logprob. Lower this if you met OOM problem. Must be a divisor of TRAIN_BS.
 
 # Logging Setting
 PROJECT_NAME=rubric_rm
-EXPERIMENT_NAME=rubric_rm_deepseek_r1_distilled_14B_LR${LR}_filtered_sky_code_8k_math_10k_rubric_reasoning_4k8k
+EXPERIMENT_NAME=rubric_rm_qwen2.5_32B_LR${LR}_filtered_sky_code_8k_math_10k_rubric_evidence_classify_weight_4k4k_distilled_OpenAI
 
 # Reward Setting
-REWARD_PATH=./rubric_rm/verl/utils/reward_score/lm_as_judge_evidence_rubric_reasoning.py
+REWARD_PATH=./rubric_rm/verl/utils/reward_score/lm_as_judge_evidence_rubric_classify_separate_reward.py
 REWARD_FUNC_NAME=lm_as_judge_match
 
 # Task
-TRAIN_TASK="gaotang/filtered_sky_code_8k_math_10k_rubric_reasoning"
-EVAL_TASK="gaotang/filtered_sky_code_8k_math_10k_rubric_reasoning"
+TRAIN_TASK="gaotang/filtered_sky_code_8k_math_10k_rubric_evidence_classify_weight_rest_0417"
+EVAL_TASK="gaotang/filtered_sky_code_8k_math_10k_rubric_evidence_classify_weight_rest_0417"
 
 # FIXED SETTING (DO NOT MODIFY IF YOU DO NOT KNOW WHAT IT MEANS)
 MAX_NUM_BATCHED_TOKENS=$(($MAX_PROMPT_LENGTH + $MAX_RESPONSE_LENGTH))
@@ -134,6 +134,7 @@ python3 -m rubric_rm.verl.trainer.main_ppo \
     trainer.n_gpus_per_node=${N_GPU} \
     trainer.nnodes=${N_NODES} \
     actor_rollout_ref.actor.entropy_coeff=0
+
 
 A=$(ls checkpoints/${PROJECT_NAME}/${EXPERIMENT_NAME}/global_step_* | sort -t_ -k3 -n | tail -n1 | sed 's/:$//')
 python rubric_rm/verl/scripts/converter.py \
