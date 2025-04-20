@@ -1,6 +1,6 @@
 
 
-deepspeed --include localhost:0,1,2,3 --module openrlhf.cli.train_sft \
+deepspeed --include localhost:0,6 --module openrlhf.cli.train_sft \
    --save_path /shared/nas2/xiusic/gaotang/skylab-v02-math-18k-code-2_5k-baseline/ckpt/qwen-32b-sft-sky_filtered_code_8k_math_10k_distilled_claude_o3_0419 \
    --save_steps -1 \
    --logging_steps 1 \
