@@ -4,7 +4,7 @@ export VERL_PPO_LOGGING_LEVEL="INFO"
 N_GPU=8
 
 # Model Setting
-MODEL_PATH=gaotang/qwen_7b_sky_filtered_code8k_math_10k_distilled_OpenAI
+MODEL_PATH=gaotang/qwen_7b_sky_filtered_code8k_math_10k_distilled_Claude_o3_0419
 
 # Training Setting
 LR=1.0e-6
@@ -21,8 +21,8 @@ FORWARD_PER_GPU=4       # Batch size to get logprob. Lower this if you met OOM p
 
 # Logging Setting
 PROJECT_NAME=rubric_rm
-EXPERIMENT_NAME=rubric_rm_qwen2.5_7B_LR${LR}_filtered_sky_code_8k_math_10k_rubric_evidence_classify_weight_4k8k_distilled_OpenAI
-SAVE_NAME=qwen2.5_7B_LR${LR}_filtered_sky_code_8k_math_10k_rubric_evidence_classify_weight_4k8k_distilled_OpenAI
+EXPERIMENT_NAME=rubric_rm_qwen2.5_7B_LR${LR}_filtered_sky_code_8k_math_10k_rubric_evidence_classify_weight_4k8k_Claude_o3_0419_ShuffledDataset
+SAVE_NAME=qwen2.5_7B_LR${LR}_filtered_sky_code_8k_math_10k_rubric_evidence_classify_weight_4k8k_Claude_o3_0419_ShuffledDataset
 SAVE_META_DIR="Your"
 
 
