@@ -13,7 +13,7 @@ TOTAL_EPISODES=1
 SAVE_EVERY_STEP=15
 TEST_EVERY_STEP=100000
 TRAIN_BS=4          # Rollout batchsize. Could be arbitrary large, but must be divided by N_GPU.
-PPO_MINI_BS=4         # Train batch size. Could be arbitrary large, must be the divisor of TRAIN_BS and be divided by N_GPU. Setting this equal to TRAIN_BS means strictly on-policy.
+PPO_MINI_BS=1         # Train batch size. Could be arbitrary large, must be the divisor of TRAIN_BS and be divided by N_GPU. Setting this equal to TRAIN_BS means strictly on-policy.
 MAX_PROMPT_LENGTH=4096  # Lower this if you met OOM problem.
 MAX_RESPONSE_LENGTH=4096 # Lower this if you met OOM problem
 TRAIN_PER_GPU=1         # REAL train batch size per gpu. Lower this if you met OOM problem. Must be a divisor of PPO_MINI_BS.
@@ -42,7 +42,7 @@ ray stop
 sleep 5
 ray stop
 
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=3,4
 ray start --head --node-ip-address 0.0.0.0 --num-gpus ${N_GPU}
 
 python3 -m rubric_rm.verl.trainer.main_ppo \
