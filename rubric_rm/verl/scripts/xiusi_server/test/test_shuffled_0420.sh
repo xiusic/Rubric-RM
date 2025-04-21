@@ -21,18 +21,18 @@ FORWARD_PER_GPU=1      # Batch size to get logprob. Lower this if you met OOM pr
 
 # Logging Setting
 PROJECT_NAME=rubric_rm_debug
-EXPERIMENT_NAME=debug_reasoning_reasoning
+EXPERIMENT_NAME=debug_problems_0420
 
 SAVE_META_DIR=/shared/nas2/xiusic/gaotang/skylab-v02-code-8k-math-10k/
-SAVE_NAME=debug_reasoning_reasoning
+SAVE_NAME=debug_problems_0420
 
 # Reward Setting
 REWARD_PATH=./rubric_rm/verl/utils/reward_score/lm_as_judge_evidence_rubric_classify_separate_reward.py
 REWARD_FUNC_NAME=lm_as_judge_match
 
 # Task
-TRAIN_TASK="gaotang/filtered_sky_code_8k_math_10k_rubric_reasoning_test"
-EVAL_TASK="gaotang/filtered_sky_code_8k_math_10k_rubric_reasoning_test"
+TRAIN_TASK="gaotang/filtered_sky_code_8k_math_10k_rubric_evidence_classify_weight_rest_0420_shuffle_test"
+EVAL_TASK="gaotang/filtered_sky_code_8k_math_10k_rubric_evidence_classify_weight_rest_0420_shuffle_test"
 
 # FIXED SETTING (DO NOT MODIFY IF YOU DO NOT KNOW WHAT IT MEANS)
 MAX_NUM_BATCHED_TOKENS=$(($MAX_PROMPT_LENGTH + $MAX_RESPONSE_LENGTH))
