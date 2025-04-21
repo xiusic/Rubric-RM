@@ -27,7 +27,7 @@ SAVE_META_DIR=/shared/nas2/xiusic/gaotang/skylab-v02-code-8k-math-10k/
 SAVE_NAME=debug_problems_0420_3
 
 # Reward Setting
-REWARD_PATH=./rubric_rm/verl/utils/reward_score/lm_as_judge_evidence_rubric_classify_separate_reward.py
+REWARD_PATH=./rubric_rm/verl/utils/reward_score/lm_as_judge_evidence_rubric_reasoning.py
 REWARD_FUNC_NAME=lm_as_judge_match
 
 # Task
