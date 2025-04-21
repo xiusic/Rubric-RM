@@ -31,8 +31,8 @@ REWARD_PATH=./rubric_rm/verl/utils/reward_score/lm_as_judge_evidence_rubric_reas
 REWARD_FUNC_NAME=lm_as_judge_match
 
 # Task
-TRAIN_TASK="gaotang/filtered_sky_code_8k_math_10k_rubric_evidence_classify_weight_rest_0417"
-EVAL_TASK="gaotang/filtered_sky_code_8k_math_10k_rubric_evidence_classify_weight_rest_0417"
+TRAIN_TASK="gaotang/filtered_sky_code_8k_math_10k_rubric_evidence_classify_weight_rest_0420_shuffle"
+EVAL_TASK="gaotang/filtered_sky_code_8k_math_10k_rubric_evidence_classify_weight_rest_0420_shuffle"
 
 # FIXED SETTING (DO NOT MODIFY IF YOU DO NOT KNOW WHAT IT MEANS)
 MAX_NUM_BATCHED_TOKENS=$(($MAX_PROMPT_LENGTH + $MAX_RESPONSE_LENGTH))
