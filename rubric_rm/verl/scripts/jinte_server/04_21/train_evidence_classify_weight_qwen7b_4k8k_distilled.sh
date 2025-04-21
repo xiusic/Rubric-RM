@@ -21,8 +21,8 @@ FORWARD_PER_GPU=4       # Batch size to get logprob. Lower this if you met OOM p
 
 # Logging Setting
 PROJECT_NAME=rubric_rm
-EXPERIMENT_NAME=rubric_rm_qwen2.5_7B_LR${LR}_filtered_sky_code_8k_math_10k_rubric_evidence_classify_weight_4k8k_Claude_o3_0419_ShuffledDataset
-SAVE_NAME=qwen2.5_7B_LR${LR}_filtered_sky_code_8k_math_10k_rubric_evidence_classify_weight_4k8k_Claude_o3_0419_ShuffledDataset
+EXPERIMENT_NAME=rubric_rm_qwen2.5_7B_LR${LR}_filtered_sky_code_8k_math_10k_rubric_evidence_classify_weight_4k8k_distilled_Claude_o3_0419_ShuffleDataset
+SAVE_NAME=qwen2.5_7B_LR${LR}_filtered_sky_code_8k_math_10k_rubric_evidence_classify_weight_4k8k_distilled_Claude_o3_0419_ShuffleDataset
 SAVE_META_DIR="Your"
 
 
