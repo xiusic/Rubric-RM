@@ -271,6 +271,22 @@ MTBENCH_SFT_new = {
     "output_format": "A",
 }
 
+MTBENCH_ORIGINAL = {
+    "name": 'original',
+    'type': 'pairwise',
+    'system_prompt': "Please act as an impartial judge and evaluate the quality of the responses provided by two AI Chatbots to the Client's question displayed below.\n"
+        "You should choose the chatbot that follows the client's instructions and answers the client's question better. " 
+        "Do not allow the length of the responses to influence your evaluation. Do not favor certain names of the chatbots. Be as objective as possible. " 
+        "Output your final verdict at last by strictly following this format: "
+        "'<answer>[[A]]</answer>' if Chatbot A is better, or '<answer>[[B]]</answer>' if Chatbot B is better.",
+    "prompt_template": 
+     "[Client Question]\n{question}\n\n[The Start of Chatbot A's Response]\n{answer_a}\n[The End of Chatbot A's Response]\n\n"
+     "[The Start of Chatbot B's Response]\n{answer_b}\n[The End of Chatbot B's Response]",
+    "description": "Prompt for general questions",
+    "category": "general",
+    "output_format": "A",
+}
+
 MTBENCH_SFT_new_user = {
     "name": 'SFT-new',
     'type': 'pairwise',
@@ -1027,6 +1043,14 @@ def format_judge_answers(question, answer_a, answer_b, multi_turn=False, model_m
             answer_b=answer_b[1]["content"],
             **kwargs,
         )
+    elif model_modifier == "original":
+        system_prompt = MTBENCH_ORIGINAL["system_prompt"]
+        user_prompt = MTBENCH_ORIGINAL["prompt_template"].format(
+            question=question,
+            answer_a=answer_a[1]["content"],
+            answer_b=answer_b[1]["content"],
+            **kwargs,
+        )
 
     else:
         if multi_turn:
@@ -1196,7 +1220,7 @@ def process_judgement(judgment, model_modifier):
             return "B"
         else:
             return "error"
-    elif model_modifier == "reasoning":
+    elif model_modifier == "reasoning" or model_modifier == "original":
         # print("#"*100)
         pred = judgment[-80:]
         # print("pred: ",pred)

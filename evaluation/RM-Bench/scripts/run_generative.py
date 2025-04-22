@@ -123,6 +123,9 @@ def get_args():
         '--sft_new', action='store_true', default=False, help='use sft chat template for models that use a rubric'
     )
     parser.add_argument(
+        '--original', action='store_true', default=False, help='use sft chat template for models that use a rubric'
+    )
+    parser.add_argument(
         '--sft_new_user', action='store_true', default=False, help='use sft chat template for models that use a rubric'
     )
     parser.add_argument(
@@ -262,6 +265,8 @@ def main():
         model_modifier = 'rubric_rl_new'
     if args.sft_new:
         model_modifier = "sft_new"
+    if args.original:
+        model_modifier = "original"
     if args.sft_new_user:
         model_modifier = "sft_new_user"
     if args.icl:
@@ -533,6 +538,9 @@ def main():
                             json.dump(answers, file)
                     elif args.reasoning:
                         with open(f"./output/answers{ds_string}_reasoning.json", "w") as file:
+                            json.dump(answers, file)
+                    elif args.original:
+                        with open(f"./output/answers{ds_string}_original.json", "w") as file:
                             json.dump(answers, file)
                     elif args.rubric_evidence:
                         with open(f"./output/answers{ds_string}_rubric_evidence.json", "w") as file:
@@ -842,6 +850,9 @@ def main():
                 json.dump(answers, file)
         elif args.sft_new:
             with open(f"./result/answers{ds_string}_sft_new_{args.model_save_name}.json", "w") as file:
+                json.dump(answers, file, indent=4)
+        elif args.original:
+            with open(f"./result/answers{ds_string}_original_{args.model_save_name}.json", "w") as file:
                 json.dump(answers, file, indent=4)
         elif args.sft_new_user:
             with open(f"./result/answers{ds_string}_sft_new_user_{args.model_save_name}.json", "w") as file:

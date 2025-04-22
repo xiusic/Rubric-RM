@@ -115,6 +115,9 @@ def get_args():
         '--sft_new', action='store_true', default=False, help='use sft chat template for models that use a rubric'
     )
     parser.add_argument(
+        '--original', action='store_true', default=False, help='use sft chat template for models that use a rubric'
+    )
+    parser.add_argument(
         '--sft_new_user', action='store_true', default=False, help='use sft chat template for models that use a rubric'
     )
     parser.add_argument(
@@ -260,6 +263,8 @@ def main():
         model_modifier = "sft_new"
     if args.sft_new_user:
         model_modifier = "sft_new_user"
+    if args.original:
+        model_modifier = "original"
     if args.icl:
         model_modifier = "icl"
     if args.icl_openai:
@@ -382,7 +387,7 @@ def main():
                 elif winner == "strong_error":
                     return 0 
                 elif winner == "error":
-                    return 0.5
+                    return 0
                 else:  # if "error"
                     raise NotImplementedError("Problem with the winner text!")  # effectively a tie
             else:
