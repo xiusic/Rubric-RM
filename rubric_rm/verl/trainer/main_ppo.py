@@ -107,7 +107,8 @@ def main_task(config):
     # define worker classes
     if config.actor_rollout_ref.actor.strategy == 'fsdp':
         assert config.actor_rollout_ref.actor.strategy == config.critic.strategy
-        from verl.workers.fsdp_workers import ActorRolloutRefWorker, CriticWorker
+        from rubric_rm.verl.workers.fsdp_workers import ActorRolloutRefWorker
+        from verl.workers.fsdp_workers import CriticWorker
         from verl.single_controller.ray import RayWorkerGroup
         ray_worker_group_cls = RayWorkerGroup
 
