@@ -88,6 +88,7 @@ SAVE_EVERY_STEP=100
 TEST_EVERY_STEP=100000
 TRAIN_BS=1024           # Rollout batchsize. Could be arbitrary large, but must be divided by N_GPU.
 PPO_MINI_BS=128         # Train batch size. Could be arbitrary large, must be the divisor of TRAIN_BS and be divided by N_GPU. Setting this equal to TRAIN_BS means strictly on-policy.
+WARMUP_STYLE=constant
 
 MAX_PROMPT_LENGTH=4096  # Lower this if you met OOM problem.
 MAX_RESPONSE_LENGTH=512 # Lower this if you met OOM problem
@@ -133,7 +134,8 @@ python3 -m rubric_rm.verl.trainer.main_ppo \
     trainer.experiment_name=${EXPERIMENT_NAME} \
     trainer.n_gpus_per_node=${N_GPU} \
     trainer.nnodes=${N_NODES} \
-    actor_rollout_ref.actor.entropy_coeff=0
+    actor_rollout_ref.actor.entropy_coeff=0 \
+    actor_rollout_ref.actor.optim.warmup_style=${WARMUP_STYLE} \
 
 A=$(ls checkpoints/${PROJECT_NAME}/${EXPERIMENT_NAME}/global_step_* | sort -t_ -k3 -n | tail -n1 | sed 's/:$//')
 python rubric_rm/verl/scripts/converter.py \
