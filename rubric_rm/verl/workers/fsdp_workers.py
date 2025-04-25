@@ -231,7 +231,7 @@ class ActorRolloutRefWorker(Worker):
 
         # TODO: add more optimizer args into config
         if role == 'actor' and optim_config is not None:
-            from verl.utils.torch_functional import get_constant_schedule_with_warmup
+            from verl.utils.torch_functional import get_constant_schedule_with_warmup, get_cosine_schedule_with_warmup
             actor_optimizer = optim.AdamW(actor_module_fsdp.parameters(),
                                           lr=optim_config.lr,
                                           betas=optim_config.get('betas', (0.9, 0.999)),
@@ -245,8 +245,15 @@ class ActorRolloutRefWorker(Worker):
 
             print(f'Total steps: {total_steps}, num_warmup_steps: {num_warmup_steps}')
 
-            actor_lr_scheduler = get_constant_schedule_with_warmup(optimizer=actor_optimizer,
-                                                                   num_warmup_steps=num_warmup_steps)
+            if optim_config.warmup_style == "constant":
+                actor_lr_scheduler = get_constant_schedule_with_warmup(optimizer=actor_optimizer,
+                                                                    num_warmup_steps=num_warmup_steps)
+            elif optim_config.warmup_style == "cosine":
+                actor_lr_scheduler = get_cosine_schedule_with_warmup(
+                    optimizer=actor_optimizer, num_warmup_steps=num_warmup_steps, num_training_steps=total_steps
+                )
+            else:
+                raise NotImplementedError(f"Warmup style {optim_config.warmup_style} is not supported")
         else:
             actor_optimizer = None
             actor_lr_scheduler = None
