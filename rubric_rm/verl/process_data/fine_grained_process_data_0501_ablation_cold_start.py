@@ -358,37 +358,13 @@ SFT_MULTI = [
     }
 ]
 
-# PROMPT_TEMPLATE_RUBRIC_EVIDENCE_CLASSIFICATION_SINGLE = [
-#     {
-#         'role': 'system',
-#         'content': (
-#         "Please act as an impartial judge and evaluate the quality of the responses provided by two AI Chatbots to the Client's question displayed below.\n"
-#         "First, make a judgement on the types of conversation you are provided with. You should classify the conversation into Reasoning tasks or Chat tasks. "
-#         "Reasoning tasks primarily consist of math and coding questions that require domain knowledge and multi-step inference, logical deduction, or combining information to reach a conclusion. "
-#         "Chat tasks include causal conversations that focuses on surface-level helpfulness, stylistic quality, factual recall, or safety, without deep inference. "
-#         "Indicate your judgement by showing either '<type>Reasoning</type>' or '<type>Chat</type>'.\n"
-#         "For Reasoning tasks, you need to solve the question raised by the Client by yourself and show your answer within <solution>...</solution> tags. "
-#         "Then, compare the responses from the two AI Chatbots based on your own solution and provide your evaluation within <eval>...</eval> tags. "
-#         "After providing your explanation, output your final verdict by strictly following this format: "
-#         "'<answer>[[A]]</answer>' if Chatbot A is better, or '<answer>[[B]]</answer>' if Chatbot B is better.\n\n"
-#         "For Chat tasks, you need to first generate the rubric items, and enclose them within <rubric> and </rubric> tags. "
-#         "Inside the <rubric> section, also include <justify>...</justify> to explain why you chose those rubric criteria. "
-#         "Ensure your generated rubric is specific, clear, and tailored to compare the Chatbot responses in the context of the Client's question or conversation. "
-#         "Then, compare the following two conversations between the Client and the AI Chatbots, and provide your evaluation according to the rubric items. " 
-#         "Enclose your complete evaluation explanation within <eval> and </eval> tags. " 
-#         "After providing your explanation, output your final verdict by strictly following this format: "
-#         "'<answer>[[A]]</answer>' if Chatbot A is better, or '<answer>[[B]]</answer>' if Chatbot B is better.\n\n"
-#         "Throughout your evaluation, ensure that the order in which the responses are presented does not influence your decision, and do not let response length or Chatbot names affect your evaluation. Be as objective as possible. "
-#         "Base your evaluation on the specific text of each Chatbot's response, and justify your evaluation by quoting or summarizing relevant parts of each response. " 
-#         "Whenever you quote Chatbot A verbatim, enclose that text in <quote_A>...</quote_A>. " 
-#         "Whenever you summarize or paraphrase Chatbot A, use <summary_A>...</summary_A>. " 
-#         "Likewise, for Chatbot B, use <quote_B>...</quote_B> or <summary_B>...</summary_B>. "
-#         "In summary, your response format should obey the following: "
-#         "For Reasoning tasks: <type>Reasoning</type>\n\n<solution> solution here </solution>\n\n<eval> detailed evaluation here, referencing each Chatbot's response using <quote_A>...</quote_A>, or <summary_A>...</summary_A>, and <quote_B>...</quote_B> or <summary_B>...</summary_B> as needed </eval>\n\n<answer>[[A/B]]</answer>\n"
-#         "For Chat tasks: <type>Chat</type>\n\n<rubric> rubric items here <justify> justification for rubrics </justify> </rubric>\n\n<eval> detailed evaluation here, referencing each Chatbot's response using <quote_A>...</quote_A>, or <summary_A>...</summary_A>, and <quote_B>...</quote_B> or <summary_B>...</summary_B> as needed </eval>\n\n<answer>[[A/B]]</answer>"
-#         )
-#     }
-# ]
+SYSTEM_ABLATION_NO_RUBRIC = (
+    "Please act as an impartial judge and evaluate the quality of the responses provided by two AI Chatbots to the Client's question displayed below.\n"
+    "You should choose the chatbot that follows the client's instructions and answers the client's question better. " 
+    "Do not allow the length of the responses to influence your evaluation. Do not favor certain names of the chatbots. Be as objective as possible. "
+    "First, compare the chatbot responses and provide your evaluations. "
+    "Then, conclude with your verdict using exactly this format: <answer>[[A]]</answer> if Chatbot A is better, <answer>[[B]]</answer> if Chatbot B is better."
+)
 
 
 
@@ -724,10 +700,29 @@ def convert_ds_to_sft_9k_longchain():
     dataset.push_to_hub("gaotang/04_25_9k_distilled_sft_ablation")
 
 
+def convert_to_no_rubrics_ablation():
+    ds = load_dataset("gaotang/filtered_sky_code_8k_math_10k_rubric_evidence_classify_weight")['train']
+    context_messages = []
+    winner = []
+
+    for item in ds:
+        context_message = copy.deepcopy(item['context_messages'])
+        winner.append(item['winner'])
+        assert context_message[0]['role'] == 'system' and context_message[1]['role'] == 'user'
+
+        context_message[0]['content'] = SYSTEM_ABLATION_NO_RUBRIC
+        context_messages.append(context_message) 
+    dataset = Dataset.from_dict({
+        'context_messages': context_messages,
+        'winner': winner
+    })
+    dataset.push_to_hub("gaotang/05_01_ablation_no_rubrics_cold_start")
+
 
 
 if __name__ == '__main__':
     # collect_evidence_classify_dataset()    
     # convert_ds_to_sft()
-    convert_ds_to_sft_9k_longchain()
+    # convert_ds_to_sft_9k_longchain()
+    convert_to_no_rubrics_ablation()
     # convert_ds_to_reasoning()
