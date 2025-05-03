@@ -139,6 +139,9 @@ def get_args():
         '--rubric_evidence_classify_weight', action='store_true', default=False, help='use rubric_rl chat template for models that use a rubric'
     )
     parser.add_argument(
+        '--ablation_no_rubric', action='store_true', default=False, help='use rubric_rl chat template for models that use a rubric'
+    )
+    parser.add_argument(
         '--rubric_evidence_classify_guideline', action='store_true', default=False, help='use rubric_rl chat template for models that use a rubric'
     )
     parser.add_argument(
@@ -251,6 +254,8 @@ def main():
         model_modifier = 'rubric_evidence_classify'
     if args.rubric_evidence_classify_weight:
         model_modifier = 'rubric_evidence_classify_weight'
+    if args.ablation_no_rubric:
+        model_modifier = 'ablation_no_rubric'
     if args.rubric_evidence_classify_guideline:
         model_modifier = 'rubric_evidence_classify_guideline'
     if args.reasoning:

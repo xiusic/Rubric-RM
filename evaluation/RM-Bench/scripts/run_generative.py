@@ -147,6 +147,9 @@ def get_args():
         '--rubric_evidence_classify_weight', action='store_true', default=False, help='use rubric_rl chat template for models that use a rubric'
     )
     parser.add_argument(
+        '--ablation_no_rubric', action='store_true', default=False, help='use rubric_rl chat template for models that use a rubric'
+    )
+    parser.add_argument(
         '--reasoning', action='store_true', default=False, help='use rubric_rl chat template for models that use a rubric'
     )
     parser.add_argument(
@@ -255,6 +258,8 @@ def main():
         model_modifier = 'rubric_evidence_classify'
     if args.rubric_evidence_classify_weight:
         model_modifier = 'rubric_evidence_classify_weight'
+    if args.ablation_no_rubric:
+        model_modifier = 'ablation_no_rubric'
     if args.reasoning:
         model_modifier = 'reasoning'
     if args.rubric_evidence:
@@ -536,6 +541,9 @@ def main():
                     elif args.rubric_evidence_classify_weight:
                         with open(f"./output/answers{ds_string}_rubric_evidence_classify_weight.json", "w") as file:
                             json.dump(answers, file)
+                    elif args.ablation_no_rubric:
+                        with open(f"./output/answers{ds_string}_ablation_no_rubric.json", "w") as file:
+                            json.dump(answers, file)
                     elif args.reasoning:
                         with open(f"./output/answers{ds_string}_reasoning.json", "w") as file:
                             json.dump(answers, file)
@@ -641,330 +649,6 @@ def main():
         right += sum(item['result'])
 
     print(f"Finished. The ordinary accuracy is: {right / total}")
-
-    exit()       
-
-
-    if is_api_models:
-        ############################
-        # Run inference via API
-        ############################
-        def update_progress_bar(done, total):
-            # Simple text-based progress bar
-            progress = int(50 * done / total)  # Calculate progress (50 chars width)
-            sys.stdout.write("\r[{}{}] {}/{}".format("#" * progress, "." * (50 - progress), done, total))
-            sys.stdout.flush()
-
-        def get_judgement(batch, debug=args.debug):
-            mult_turn = True if len(batch["text_chosen"]) > 2 else False
-            prompt = batch["text_chosen"][0]["content"]
-            answer_a = batch["text_chosen"]
-            answer_b = batch["text_rejected"]
-
-            # shuffle a and b randomly for position bias
-            is_shuffled = np.random.rand() > 0.5
-            if is_shuffled:
-                answer_a, answer_b = answer_b, answer_a
-                winner_text = "B"
-                loser_text = "A"
-            else:
-                winner_text = "A"
-                loser_text = "B"
-
-            if len(batch["text_chosen"]) <= 4:  # set up only for 1 or 2 turns
-                winner, request, judgement = run_judge_pair(
-                    prompt, answer_a, answer_b, args.model, multi_turn=mult_turn, model_modifier=model_modifier
-                )
-                if debug:
-                    print(f"Prompt: {request}")
-                    print(f"Judgement: {judgement}")
-
-                # handle voting
-                if isinstance(winner, list):
-                    # print votes if debug
-                    if debug:
-                        print(winner)
-                    winner = max(set(winner), key=winner.count)
-
-                if winner == winner_text:
-                    return 1
-                elif winner == loser_text:
-                    return 0
-                elif winner == "error":
-                    return 0 
-                elif winner == "strong_error":
-                    return 0
-                else:  # if "error"
-                    raise NotImplementedError("Chekck your winner!")  # effectively a tie
-            else:
-                return 0.5
-
-        with ThreadPoolExecutor(max_workers=args.num_threads) as executor:
-            # Map 'my_function' across the vector, executing in parallel using threads
-            # results = list(executor.map(get_judgement, dataset))
-
-            # Progress bar version
-            results = [None] * len(dataset)  # Preallocate results list
-            done_tasks = 0  # Counter for completed tasks
-
-            with ThreadPoolExecutor(max_workers=args.num_threads) as executor:
-                # Submit all tasks and hold their futures in a list
-                future_to_index = {executor.submit(get_judgement, x): i for i, x in enumerate(dataset)}
-
-                # As tasks complete, update progress and store results in the original order
-                for future in as_completed(future_to_index):
-                    index = future_to_index[future]
-                    results[index] = future.result()
-                    done_tasks += 1
-                    update_progress_bar(done_tasks, len(dataset))
-
-            # Print newline after progress bar
-            print()
-    else:
-        ############################
-        # Run model weights with vllm
-        ############################
-
-        def format_judgements(batch, optional_chat_template=None):
-            # TODO expand this to include fastchat chat templates if needed
-            mult_turn = True if len(batch["text_chosen"]) > 2 else False
-            if mult_turn:
-                raise NotImplementedError("Check multi turn")
-            prompt = batch["text_chosen"][0]["content"]
-            answer_a = batch["text_chosen"]
-            answer_b = batch["text_rejected"]
-
-            # shuffle a and b randomly for position bias
-            is_shuffled = np.random.rand() > 0.5
-            if is_shuffled:
-                answer_a, answer_b = answer_b, answer_a
-
-            system_prompt, user_prompt = format_judge_answers(
-                prompt, answer_a, answer_b, multi_turn=mult_turn, model_modifier=model_modifier
-            )
-
-            if np.random.rand() < 0.01:
-                print("system_prompt:", system_prompt)
-                print("user_prompt:", user_prompt)
-
-            if optional_chat_template is not None:
-                optional_chat_template.set_system_message(system_prompt)
-                optional_chat_template.messages = []
-                optional_chat_template.append_message(optional_chat_template.roles[0], user_prompt)
-                optional_chat_template.append_message(optional_chat_template.roles[1], None)
-                prompt = optional_chat_template.get_prompt()
-            else:
-                messages = [
-                    {
-                        "role": "system",
-                        "content": system_prompt,
-                    },
-                    {"role": "user", "content": user_prompt},
-                ]
-                prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-                # chat template already include special tokens
-                # when vllm runs model.generate on prompts, the tokenizer is applied to the prompts
-                # defaulting to add_special_tokens=True - this will end up duplicating the special tokens
-                # so we need to tokenize without adding special tokens
-                tokenized_prompt = tokenizer(prompt, add_special_tokens=False, return_length=True)
-                prompt_ids = tokenized_prompt["input_ids"]
-
-            batch["text"] = prompt
-            batch["is_shuffled"] = is_shuffled
-            batch["prompt_ids"] = prompt_ids
-            return batch
-
-        # format the dataset for the model, with optional fastchat templating
-        if args.chat_template is not None:
-            chat_template = get_conv_template(args.chat_template)
-        else:
-            chat_template = None
-            
-        dataset_prompts = dataset.map(format_judgements, fn_kwargs={"optional_chat_template": chat_template})
-
-        # collect texts of dataset in list
-        prompts = dataset_prompts["text"]
-        prompt_ids = dataset_prompts["prompt_ids"]
-        is_shuffled = dataset_prompts["is_shuffled"]
-
-        # generate
-        logger.info("*** Run inference ***")
-        # print("model_modifer: ", model_modifier)
-        # exit()
-        if model_modifier == "Atla":
-            logger.info("Using Atla model for inference")
-            outputs = model.generate(prompt_token_ids=prompt_ids, sampling_params=sampling_params)
-        else:
-            # if args.model == 'meta-llama/Llama-3.1-8B-Instruct':
-
-            #     outputs = []
-            #     for prompt in tqdm(prompts, total=len(prompts)):
-            #         input_ids = tokenizer(prompt, return_tensors='pt', add_special_tokens=False).input_ids
-            #         out = model.generate(input_ids.cuda(), max_new_tokens=50)
-            #         import ipdb; ipdb.set_trace()
-            #         outputs.append(tokenizer.decode(out[0][input_ids.shape[1]:]))
-
-            #     with open("./outputs.json", "w") as file:
-            #         json.dump(outputs, file)
-
-            # else:
-            sampling_params = SamplingParams(
-                n=1,
-                temperature=0,
-                top_p=1,
-                max_tokens=2048,
-                stop_token_ids=stop_token_ids,
-            )
-            outputs = model.generate(prompts, sampling_params=sampling_params)
-
-            # print(output)
-        # print("model_modifer: ", model_modifier)
-        # exit()
-        logger.info("*** Inference done ***")
-
-        if args.model == 'meta-llama/Llama-3.1-8B-Instruct':
-            answers = outputs
-        else:
-            answers = [o.outputs[0].text for o in outputs]
-        print(answers)
-        winners = [process_judgement(a, model_modifier) for a in answers]
-
-        ds_string = '_pku_safe' if args.dataset == 'PKU-Alignment/PKU-SafeRLHF' else ''
-        if args.rubric_rl:
-            with open(f"./output/answers{ds_string}_rubric_rl_{args.model_save_name}.json", "w") as file:
-                json.dump(answers, file)
-        elif args.rubric:
-            with open(f"./output/answers{ds_string}_rubric.json", "w") as file:
-                json.dump(answers, file)
-        elif args.rubric_rl_rubric:
-            with open(f"./output/answers{ds_string}_rubric_rl_rubric.json", "w") as file:
-                json.dump(answers, file)
-        elif args.rubric_evidence_classify:
-            with open(f"./output/answers{ds_string}_rubric_evidence_classify.json", "w") as file:
-                json.dump(answers, file)
-        elif args.rubric_evidence_classify_weight:
-            with open(f"./output/answers{ds_string}_rubric_evidence_classify_weight.json", "w") as file:
-                json.dump(answers, file)
-        elif args.reasoning:
-            with open(f"./output/answers{ds_string}_reasoning.json", "w") as file:
-                json.dump(answers, file)
-        elif args.sft_new:
-            with open(f"./result/answers{ds_string}_sft_new_{args.model_save_name}.json", "w") as file:
-                json.dump(answers, file, indent=4)
-        elif args.original:
-            with open(f"./result/answers{ds_string}_original_{args.model_save_name}.json", "w") as file:
-                json.dump(answers, file, indent=4)
-        elif args.sft_new_user:
-            with open(f"./result/answers{ds_string}_sft_new_user_{args.model_save_name}.json", "w") as file:
-                json.dump(answers, file, indent=4)
-        elif args.icl:
-            with open(f"./result/answers{ds_string}_icl_{args.model_save_name}.json", "w") as file:
-                json.dump(answers, file, indent=4)
-        elif args.icl_openai:
-            with open(f"./result/answers{ds_string}_icl_openai_{args.model_save_name}.json", "w") as file:
-                json.dump(answers, file, indent=4)
-        elif args.guideline:
-            with open(f"./result/answers{ds_string}_guideline_{args.model_save_name}.json", "w") as file:
-                json.dump(answers, file, indent=4)
-        else:
-            with open(f"./output/answers{ds_string}.json", "w") as file:
-                json.dump(answers, file)
-
-        def process_shuffled(win, shuffle):
-            if shuffle:
-                winner_text = "B"
-                loser_text = "A"
-            else:
-                winner_text = "A"
-                loser_text = "B"
-
-            if win == winner_text:
-                return 1
-            elif win == loser_text:
-                return 0
-            elif win == "error":
-                return 0 
-            elif win == "strong_error":
-                return 0
-            else:  # if "error"
-                raise NotImplementedError("Chekck your win!") 
-
-        results = [process_shuffled(w, s) for w, s in zip(winners, is_shuffled)]
-
-    ############################
-    # Print & process results
-    ############################
-    # add column for results for easy printing
-    out_dataset = dataset.add_column("results", results)
-
-    # add subsets back (removed so it's not handled by cuda)
-    out_dataset = out_dataset.add_column("subset", subsets)
-    out_dataset = out_dataset.add_column("id", ids)
-
-    # model name concat if list
-    if isinstance(args.model, list):
-        model_name = "_".join(args.model)
-        model_name = "PoLL/" + model_name
-    else:
-        model_name = args.model
-    # if model in openai or Anthropic list, append org to model name
-    if args.model in OPENAI_MODEL_LIST:
-        model_name = "openai/" + model_name
-    elif args.model in ANTHROPIC_MODEL_LIST:
-        model_name = "anthropic/" + model_name
-    elif args.model in GEMINI_MODEL_LIST:
-        model_name = "google/" + model_name
-
-    # get core dataset
-    results_grouped = {}
-    results_grouped["model"] = model_name
-    results_grouped["model_type"] = model_type
-    results_grouped["chat_template"] = args.chat_template
-
-    # print per subset and log into results_grouped file
-    present_subsets = np.unique(subsets)
-    for subset in present_subsets:
-        subset_dataset = out_dataset.filter(lambda example: example["subset"] == subset)
-        num_correct = sum(subset_dataset["results"])
-        num_total = len(subset_dataset["results"])
-        print(f"{subset}: {num_correct}/{num_total} ({num_correct/num_total})")
-        results_grouped[subset] = num_correct / num_total
-
-    # log leaderboard aggregated results
-    if not args.pref_sets:
-        results_leaderboard = calculate_scores_per_section(EXAMPLE_COUNTS, SUBSET_MAPPING, results_grouped)
-        print(results_leaderboard)
-
-    ############################
-    # Upload results to hub
-    #############################
-    # sub_path = "eval-set/" if not args.pref_sets else "pref-sets/"
-    # results_url = save_to_hub(
-    #     results_grouped,
-    #     model_name,
-    #     sub_path,
-    #     args.debug,
-    #     local_only=args.do_not_save,
-    #     save_metrics_for_beaker=not args.disable_beaker_save,
-    # )
-    # if not args.do_not_save:
-    #     logger.info(f"Uploaded reward model results to {results_url}")
-
-    # logger.info("Not uploading chosen-rejected text with scores due to model compatibility")
-
-    # ############################
-    # # Save per-prompt results to hub
-    # ############################
-    # # create new json with scores and upload
-    # scores_dict = out_dataset.to_dict()
-    # scores_dict["model"] = model_name
-    # scores_dict["model_type"] = model_type
-
-    # sub_path_scores = "eval-set-scores/" if not args.pref_sets else "pref-sets-scores/"
-
-    # scores_url = save_to_hub(scores_dict, model_name, sub_path_scores, args.debug, local_only=args.do_not_save)
-    # logger.info(f"Uploading chosen-rejected text with scores to {scores_url}")
-
 
 if __name__ == "__main__":
     main()

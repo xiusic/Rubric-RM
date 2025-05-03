@@ -789,6 +789,14 @@ REASONING_MULTI = {
     "'<answer>[[A]]</answer>' if Chatbot A is better, or '<answer>[[B]]</answer>' if Chatbot B is better.",
 }
 
+SYSTEM_ABLATION_NO_RUBRIC = (
+    "Please act as an impartial judge and evaluate the quality of the responses provided by two AI Chatbots to the Client's question displayed below.\n"
+    "You should choose the chatbot that follows the client's instructions and answers the client's question better. " 
+    "Do not allow the length of the responses to influence your evaluation. Do not favor certain names of the chatbots. Be as objective as possible. "
+    "First, compare the chatbot responses and provide your evaluations. "
+    "Then, conclude with your verdict using exactly this format: <answer>[[A]]</answer> if Chatbot A is better, <answer>[[B]]</answer> if Chatbot B is better."
+)
+
 openai_helper_save_dict = {}
 
 def embed_openai(text, model="text-embedding-3-large"):
@@ -1012,6 +1020,14 @@ def format_judge_answers(question, answer_a, answer_b, multi_turn=False, model_m
         )
     elif model_modifier == 'rubric_evidence_classify_weight':
         system_prompt = GPT_REVISED_SYSTEM_CLASSIFY_WEIGHT_PROMPT_EVIDENCE
+        user_prompt = PROMPT_TEMPLATE_RUBRIC_EVIDENCE_CLASSIFICATION_SINGLE["prompt_template"].format(
+            question=question,
+            answer_a=answer_a[1]["content"],
+            answer_b=answer_b[1]["content"],
+            **kwargs,
+        )
+    elif model_modifier == "ablation_no_rubric":
+        system_prompt = SYSTEM_ABLATION_NO_RUBRIC
         user_prompt = PROMPT_TEMPLATE_RUBRIC_EVIDENCE_CLASSIFICATION_SINGLE["prompt_template"].format(
             question=question,
             answer_a=answer_a[1]["content"],
