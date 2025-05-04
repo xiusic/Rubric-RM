@@ -384,7 +384,6 @@ SYSTEM_ABLATION_NO_CLASSIFY = (
     "Important Notes:\n"
     "- Be objective and base your evaluation only on the content of the responses.\n"
     "- Do not let response order, length, or Chatbot names affect your judgment.\n"
-    "- Follow the response format strictly depending on the task type.\n\n"
 
     "Your final output must follow the format below:\n\n"
     "<rubric>\n"
